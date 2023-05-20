@@ -187,7 +187,7 @@ async fn vm_manager(path_to_config: &str) {
         .expect("Could not spawn child proc");
 
   // Run spice client sync
-  for _ in 0..10 {
+  for _ in 0..8 {
     
     tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
 

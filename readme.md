@@ -12,6 +12,9 @@ and enough networking to allow for quick remoteapp RDP connections to the host.
 ## Example Use
 
 ```
+cargo build --release
+
+/j/bins/azure-vm/target/release/azure-vm /j/bins/azure-vm/vms/tiny11.toml
 
 
 ```
