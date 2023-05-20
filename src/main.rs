@@ -97,9 +97,10 @@ async fn vm_manager(path_to_config: &str) {
 
   }
 
-  if vm_config.vm.mount_windows_virtio_iso {
-    ensure_virtio_win_iso_exists().await; // Now we can ensure passing VIRTIO_WIN_ISO_LOCAL_PATH is safe
-  }
+  // if vm_config.vm.mount_windows_virtio_iso {
+  //   ensure_virtio_win_iso_exists().await; // Now we can ensure passing VIRTIO_WIN_ISO_LOCAL_PATH is safe
+  // }
+  ensure_virtio_win_iso_exists().await;
 
   let install_flag = vm_config.vm.install_flag_file();
   if ! install_flag.exists() {
@@ -110,8 +111,35 @@ async fn vm_manager(path_to_config: &str) {
     println!("");
 
     dump_error!(
-      tokio::process::Command::new("qemu-img")
-        .args(&["create", "-f", "qcow2", &vm_config.vm.disk_image.to_string_lossy(), format!("{}G", vm_config.vm.disk_image_gb).as_str() ])
+      tokio::process::Command::new("qemu-system-x86_64")
+        .args(&[
+          "-drive", format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ).as_str(),
+          "-enable-kvm", "-m", format!("{}M", vm_config.vm.ram_mb ).as_str(),
+          "-cpu", "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time",
+          "-smp", "2",
+          "-machine", "type=pc,accel=kvm,kernel_irqchip=on",
+
+          // Possible CAC reader fwd ( lsusb -t )
+          "-usb", "-device", "usb-host,hostbus=1,hostport=2",
+
+          // Use pulse API to talk to pipewire
+          "-audiodev", "id=pa,driver=pa,server=/run/user/1000/pulse/native",
+
+          // Hmmm... likely want more config in future.
+          "-nic", "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10",
+
+          "-device", "virtio-vga,virgl=on,max_outputs=1",
+
+          // Attach boot ISO
+          "-drive", format!("file={},if=ide,index=1,media=cdrom", vm_config.install.boot_iso.display() ).as_str(),
+
+          // Attach drivers
+          "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
+
+          "-boot", "d", // c == first hd, d == first cd-rom drive
+
+
+        ])
         .status()
         .await
     );
@@ -122,6 +150,3 @@ async fn vm_manager(path_to_config: &str) {
 }
 
 
-async fn vm_task(vm_config: &VMConfig) {
-
-}
