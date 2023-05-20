@@ -1,0 +1,14 @@
+
+[install]
+# boot_iso = "https://ia804703.us.archive.org/10/items/tiny-11_202302/tiny11%20b1.iso"
+boot_iso = "/j/downloads/tiny11 b1.iso"
+
+[vm]
+name = "Tiny11"
+mount_windows_virtio_iso = true
+disk_image = "/mnt/scratch/vms/tiny11.qcow2"
+disk_image_gb = 32
+ram_mb = 4096
+
+
+
