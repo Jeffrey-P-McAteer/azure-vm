@@ -102,7 +102,7 @@ async fn vm_manager(path_to_config: &str) {
   // }
   ensure_virtio_win_iso_exists().await;
 
-  let install_flag = vm_config.vm.install_flag_file();
+  let install_flag = vm_config.vm.flag_path(".installed");
   if ! install_flag.exists() {
     println!("");
     println!("install_flag file {:?} does not exist, launching w/ install media connected.", install_flag);
@@ -148,8 +148,12 @@ async fn vm_manager(path_to_config: &str) {
   }
 
   // Now run the regular VM
-  dump_error!(
-    tokio::process::Command::new("qemu-system-x86_64")
+
+  let spice_socket = vm_config.vm.flag_path(".spice.sock");
+
+  println!("Spice socket file = {}", spice_socket.display() );
+
+  let mut qemu_proc = tokio::process::Command::new("qemu-system-x86_64")
         .args(&[
           "-drive", format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ).as_str(),
           "-enable-kvm", "-m", format!("{}M", vm_config.vm.ram_mb ).as_str(),
@@ -166,19 +170,41 @@ async fn vm_manager(path_to_config: &str) {
           // Hmmm... likely want more config in future.
           "-nic", "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10",
 
-          "-device", "virtio-vga", // gl=on,max_outputs=1 where do these get set ???
-          "-display", "gtk",
+          // Assume guest drivers are installed during install phase, use spice UI
+          "-vga", "qxl",
+          "-device", "virtio-serial-pci",
 
-          // Attach drivers
-          "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
+          "-spice", // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
+            format!("unix=on,addr={},gl=on,rendernode=/dev/dri/by-path/pci-0000:00:02.0-render,disable-ticketing=on", spice_socket.display() ).as_str(),
+
+          "-device", "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0",
+          "-chardev", "spicevmc,id=spicechannel0,name=vdagent",
 
           "-boot", "c", // c == first hd, d == first cd-rom drive
 
         ])
+        .spawn()
+        .expect("Could not spawn child proc");
+
+  // Run spice client sync
+  for _ in 0..10 {
+    
+    tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+
+    dump_error!(
+      tokio::process::Command::new("spicy")
+        .args(&[
+          format!("--uri=spice+unix://{}", spice_socket.display()).as_str()
+        ])
         .status()
         .await
     );
+  }
 
+  println!("Killing qemu...");
+
+  // And kill child on exit
+  dump_error!( qemu_proc.kill().await );
 
 }
 

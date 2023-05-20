@@ -28,10 +28,10 @@ pub struct VMBlock {
 }
 
 impl VMBlock {
-  pub fn install_flag_file(&self) -> PathBuf {
+  pub fn flag_path(&self, flag: &str) -> PathBuf {
     let mut flag_file_path = self.disk_image.clone();
     let mut file_name = flag_file_path.file_name().unwrap_or(std::ffi::OsStr::new(&self.name)).to_owned();
-    file_name.push( &std::ffi::OsStr::new(".installed") );
+    file_name.push( &std::ffi::OsStr::new(flag) );
     flag_file_path.set_file_name(file_name);
     flag_file_path
   }
