@@ -103,6 +103,8 @@ async fn vm_manager(path_to_config: &str) {
   ensure_virtio_win_iso_exists().await;
 
   let install_flag = vm_config.vm.flag_path(".installed");
+  println!("install_flag = {:?}", install_flag);
+
   if ! install_flag.exists() {
     println!("");
     println!("install_flag file {:?} does not exist, launching w/ install media connected.", install_flag);
@@ -180,6 +182,8 @@ async fn vm_manager(path_to_config: &str) {
           "-device", "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0",
           "-chardev", "spicevmc,id=spicechannel0,name=vdagent",
 
+          "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
+
           "-boot", "c", // c == first hd, d == first cd-rom drive
 
         ])
@@ -187,9 +191,14 @@ async fn vm_manager(path_to_config: &str) {
         .expect("Could not spawn child proc");
 
   // Run spice client sync
-  for _ in 0..8 {
+  for _ in 0..4 {
     
     tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+
+    match qemu_proc.try_wait() {
+      Ok(Some(exit_code)) => { println!("Qemu exited with {}, not running spice again!", exit_code ); break; },
+      _ => { /* don't care */ }
+    }
 
     dump_error!(
       tokio::process::Command::new("spicy")
