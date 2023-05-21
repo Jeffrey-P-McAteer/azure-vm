@@ -1,9 +1,16 @@
 
+use tokio::io::AsyncBufReadExt;
+use tokio::io::AsyncWriteExt;
+
+use std::io::Write;
+
+
 mod structs;
 use structs::*;
 
 #[macro_use]
 pub mod macros;
+
 
 fn main() {
   let args: Vec<String> = std::env::args().collect();
@@ -86,26 +93,30 @@ async fn handle_exit_signals() {
       _sig_term = term_stream.recv() => { want_shutdown = true; }
     };
     if want_shutdown {
-      println!("Got SIG{{TERM/INT}}, shutting down!");
-      
-      let qemu_pid = QEMU_PROC_PID.load(std::sync::atomic::Ordering::SeqCst);
-      if qemu_pid > 3 {
-        for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
-          dump_error!(
-            nix::sys::signal::kill(
-              nix::unistd::Pid::from_raw( qemu_pid ), *signal
-            )
-          );
-          tokio::time::sleep( tokio::time::Duration::from_millis(50) ).await;
-        }
-      }
-
-      // Allow spawned futures to complete...
-      tokio::time::sleep( tokio::time::Duration::from_millis(400) ).await;
-      println!("Goodbye!");
-      std::process::exit(0);
+      do_shutdown().await;
     }
   }
+}
+
+async fn do_shutdown() {
+  println!("Got SIG{{TERM/INT}}, shutting down!");
+  
+  let qemu_pid = QEMU_PROC_PID.load(std::sync::atomic::Ordering::SeqCst);
+  if qemu_pid > 3 {
+    for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
+      dump_error!(
+        nix::sys::signal::kill(
+          nix::unistd::Pid::from_raw( qemu_pid ), *signal
+        )
+      );
+      tokio::time::sleep( tokio::time::Duration::from_millis(50) ).await;
+    }
+  }
+
+  // Allow spawned futures to complete...
+  tokio::time::sleep( tokio::time::Duration::from_millis(400) ).await;
+  println!("Goodbye!");
+  std::process::exit(0);
 }
 
 static QEMU_PROC_PID: once_cell::sync::Lazy<std::sync::atomic::AtomicI32> = once_cell::sync::Lazy::new(||
@@ -200,8 +211,14 @@ async fn vm_manager(path_to_config: &str) {
   // Now run the regular VM
 
   let spice_socket = vm_config.vm.flag_path(".spice.sock");
+  let qmp_socket = vm_config.vm.flag_path(".qmp.sock");
 
   println!("Spice socket file = {}", spice_socket.display() );
+  println!("QMP socket file = {}", qmp_socket.display() );
+
+  if qmp_socket.exists() {
+    dump_error!( tokio::fs::remove_file(&qmp_socket).await );
+  }
 
   let mut qemu_proc = tokio::process::Command::new("qemu-system-x86_64")
         .args(&[
@@ -210,6 +227,8 @@ async fn vm_manager(path_to_config: &str) {
           "-cpu", "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time",
           "-smp", "2",
           "-machine", "type=pc,accel=kvm,kernel_irqchip=on",
+
+          "-qmp", format!("unix:{},server,nowait", qmp_socket.display() ).as_str(),
 
           // Possible CAC reader fwd ( lsusb -t )
           "-usb", "-device", "usb-host,hostbus=1,hostport=2",
@@ -238,32 +257,90 @@ async fn vm_manager(path_to_config: &str) {
         .spawn()
         .expect("Could not spawn child proc");
 
-  QEMU_PROC_PID.store(qemu_proc.id().unwrap_or(0) as i32, std::sync::atomic::Ordering::SeqCst);
+  let qemu_pid = qemu_proc.id().unwrap_or(0);
+  QEMU_PROC_PID.store(qemu_pid as i32, std::sync::atomic::Ordering::SeqCst);
 
-  // Run spice client sync
-  for _ in 0..4 {
-    
-    tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+  tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+
+  let mut input_lines = tokio::io::BufReader::new(tokio::io::stdin()).lines();
+
+  print!("> "); // prompt
+  dump_error!( std::io::stdout().flush() );
+  dump_error!( tokio::io::stdout().flush().await );
+
+  let qapi_stream = dump_error_and_ret!( qapi::futures::QgaStreamTokio::open_uds(qmp_socket).await );
+  let (qga, handle) = qapi_stream.spawn_tokio();
+
+  let sync_value = &qga as *const _ as usize as i32;
+  dump_error!( qga.guest_sync(sync_value).await );
+
+
+  while let Ok(Some(line)) = input_lines.next_line().await {
 
     match qemu_proc.try_wait() {
-      Ok(Some(exit_code)) => { println!("Qemu exited with {}, not running spice again!", exit_code ); break; },
+      Ok(Some(exit_code)) => { println!("Qemu exited with {}, exiting!", exit_code ); break; },
       _ => { /* don't care */ }
     }
 
-    dump_error!(
-      tokio::process::Command::new("spicy")
-        .args(&[
-          format!("--uri=spice+unix://{}", spice_socket.display()).as_str()
-        ])
-        .status()
-        .await
-    );
+    let line = line.trim();
+
+    if line == "gui" {
+      println!("Launching SPICE client...");
+      dump_error!(
+        tokio::process::Command::new("spicy")
+          .args(&[
+            format!("--uri=spice+unix://{}", spice_socket.display()).as_str()
+          ])
+          .status()
+          .await
+      );
+    }
+    else if line == "help" {
+      println!(r#"Commands:
+  - gui
+      Opens SPICE client
+  - help
+      Show this help
+  - exit / quit
+      Kill VM and exit
+  - *
+      Run as command in VM, returning output.
+"#);
+    }
+    else if line == "quit" || line == "exit" {
+      break;
+    }
+    else {
+      // Connect to QMP and send line in verbatim
+      println!("Sending to QMP: {}", line);
+
+      match qga.execute(qapi::qga::guest_info { }).await {
+        Ok(info) => {
+          println!("Guest Agent version: {}", info.version);
+        }
+        Err(e) => {
+          println!("Error: {:?}", e);
+        }
+      }
+
+
+    }
+
+    print!("> "); // prompt
+    dump_error!( std::io::stdout().flush() );
+    dump_error!( tokio::io::stdout().flush().await );
   }
+
+  println!("");
+  dump_error!( std::io::stdout().flush() );
+  dump_error!( tokio::io::stdout().flush().await );
 
   println!("Killing qemu...");
 
   // And kill child on exit
   dump_error!( qemu_proc.kill().await );
+
+  do_shutdown().await;
 
 }
 
