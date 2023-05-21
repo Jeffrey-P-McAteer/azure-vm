@@ -68,7 +68,55 @@ async fn ensure_virtio_win_iso_exists() {
 }
 
 
+async fn handle_exit_signals() {
+  let mut int_stream = dump_error_and_ret!(
+    tokio::signal::unix::signal(
+      tokio::signal::unix::SignalKind::interrupt()
+    )
+  );
+  let mut term_stream = dump_error_and_ret!(
+    tokio::signal::unix::signal(
+      tokio::signal::unix::SignalKind::terminate()
+    )
+  );
+  loop {
+    let mut want_shutdown = false;
+    tokio::select!{
+      _sig_int = int_stream.recv() => { want_shutdown = true; }
+      _sig_term = term_stream.recv() => { want_shutdown = true; }
+    };
+    if want_shutdown {
+      println!("Got SIG{{TERM/INT}}, shutting down!");
+      
+      let qemu_pid = QEMU_PROC_PID.load(std::sync::atomic::Ordering::SeqCst);
+      if qemu_pid > 3 {
+        for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
+          dump_error!(
+            nix::sys::signal::kill(
+              nix::unistd::Pid::from_raw( qemu_pid ), *signal
+            )
+          );
+          tokio::time::sleep( tokio::time::Duration::from_millis(50) ).await;
+        }
+      }
+
+      // Allow spawned futures to complete...
+      tokio::time::sleep( tokio::time::Duration::from_millis(400) ).await;
+      println!("Goodbye!");
+      std::process::exit(0);
+    }
+  }
+}
+
+static QEMU_PROC_PID: once_cell::sync::Lazy<std::sync::atomic::AtomicI32> = once_cell::sync::Lazy::new(||
+  std::sync::atomic::AtomicI32::new( 0 )
+);
+
+
 async fn vm_manager(path_to_config: &str) {
+
+  let _signal_task = tokio::spawn(handle_exit_signals());
+
   println!("Reading {}", &path_to_config);
   let vm_file_content = tokio::fs::read_to_string(path_to_config).await.expect("Could not read config file!");
   let vm_config: VMConfig = toml::from_str(&vm_file_content).expect("Could not parse config!");
@@ -189,6 +237,8 @@ async fn vm_manager(path_to_config: &str) {
         ])
         .spawn()
         .expect("Could not spawn child proc");
+
+  QEMU_PROC_PID.store(qemu_proc.id().unwrap_or(0) as i32, std::sync::atomic::Ordering::SeqCst);
 
   // Run spice client sync
   for _ in 0..4 {
