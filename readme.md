@@ -16,6 +16,8 @@ cargo build --release
 
 /j/bins/azure-vm/target/release/azure-vm /j/bins/azure-vm/vms/tiny11.toml
 
+python -m qemu.qmp.qmp_shell /mnt/scratch/vms/tiny11.qcow2.qmp.sock
+
 
 ```
 

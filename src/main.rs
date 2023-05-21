@@ -228,7 +228,7 @@ async fn vm_manager(path_to_config: &str) {
           "-smp", "2",
           "-machine", "type=pc,accel=kvm,kernel_irqchip=on",
 
-          "-qmp", format!("unix:{},server,nowait", qmp_socket.display() ).as_str(),
+          "-qmp", format!("unix:{},server=on,wait=off", qmp_socket.display() ).as_str(),
 
           // Possible CAC reader fwd ( lsusb -t )
           "-usb", "-device", "usb-host,hostbus=1,hostport=2",
