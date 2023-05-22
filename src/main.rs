@@ -198,7 +198,9 @@ async fn vm_manager(path_to_config: &str) {
           // Attach drivers
           "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
 
-          "-boot", "d", // c == first hd, d == first cd-rom drive
+          //"-boot", "d", // c == first hd, d == first cd-rom drive
+
+          "-boot", "menu=on,splash-time=18",
 
 
         ])

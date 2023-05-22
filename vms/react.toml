@@ -1,0 +1,13 @@
+
+[install]
+boot_iso = "/j/downloads/ReactOS-0.4.14-release-70-gc1dfd69-iso/ReactOS-0.4.14-release-70-gc1dfd69.iso"
+
+[vm]
+name = "ReactOS"
+mount_windows_virtio_iso = true
+disk_image = "/mnt/scratch/vms/react-os.qcow2"
+disk_image_gb = 34
+ram_mb = 4096
+
+
+
