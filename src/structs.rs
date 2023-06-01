@@ -11,6 +11,7 @@ pub struct VMConfig {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VMInstallBlock {
+  pub boot_iso_url: String,
   pub boot_iso: PathBuf,
 }
 

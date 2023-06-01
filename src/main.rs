@@ -71,6 +71,29 @@ async fn ensure_virtio_win_iso_exists() {
 }
 
 
+async fn ensure_file_downloaded(url: &str, local_file: &std::path::Path) {
+  use futures::StreamExt;
+
+  let local_file_path = local_file.to_owned();
+  if let Some(local_parent_dir) = local_file_path.parent() {
+    println!("Ensuring {} exists...", local_parent_dir.display());
+    dump_error!( tokio::fs::create_dir_all(local_parent_dir).await );
+  }
+  if ! local_file_path.exists() {
+    // Download it
+    println!("Downloading {} to {}", url, local_file.display());
+    let mut local_virtio_iso_file = tokio::fs::File::create(local_file).await.expect("Could not create file!");
+    let conn = reqwest::get(url).await.expect("Could not connect!");
+    let mut download_stream = conn.bytes_stream();
+
+    while let Some(item) = download_stream.next().await {
+      dump_error!( tokio::io::copy(&mut item.unwrap().as_ref(), &mut local_virtio_iso_file).await );
+    }
+
+  }
+}
+
+
 async fn handle_exit_signals() {
   let mut int_stream = dump_error_and_ret!(
     tokio::signal::unix::signal(
@@ -144,6 +167,10 @@ async fn vm_manager(mut path_to_config: String) {
   if vm_config.install.boot_iso.exists() {
     // Touch install media assuming it's under downloads
     dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
+  }
+  else {
+    // Download it from vm_config.install.boot_iso_url
+    ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
   }
 
   // If the disk image does not exist, create dirs + then the image in qcow2 format
