@@ -79,18 +79,26 @@ async fn ensure_file_downloaded(url: &str, local_file: &std::path::Path) {
     println!("Ensuring {} exists...", local_parent_dir.display());
     dump_error!( tokio::fs::create_dir_all(local_parent_dir).await );
   }
-  if ! local_file_path.exists() {
-    // Download it
-    println!("Downloading {} to {}", url, local_file.display());
-    let mut local_virtio_iso_file = tokio::fs::File::create(local_file).await.expect("Could not create file!");
-    let conn = reqwest::get(url).await.expect("Could not connect!");
-    let mut download_stream = conn.bytes_stream();
 
-    while let Some(item) = download_stream.next().await {
-      dump_error!( tokio::io::copy(&mut item.unwrap().as_ref(), &mut local_virtio_iso_file).await );
-    }
+  dump_error!(
+    tokio::process::Command::new("wget")
+      .args(&["--continue", url, "-O", format!("{}", local_file.display()).as_str() ])
+      .status()
+      .await
+  );
 
-  }
+  // if ! local_file_path.exists() {
+  //   // Download it
+  //   println!("Downloading {} to {}", url, local_file.display());
+  //   let mut local_virtio_iso_file = tokio::fs::File::create(local_file).await.expect("Could not create file!");
+  //   let conn = reqwest::get(url).await.expect("Could not connect!");
+  //   let mut download_stream = conn.bytes_stream();
+
+  //   while let Some(item) = download_stream.next().await {
+  //     dump_error!( tokio::io::copy(&mut item.unwrap().as_ref(), &mut local_virtio_iso_file).await );
+  //   }
+
+  // }
 }
 
 
@@ -230,7 +238,7 @@ async fn vm_manager(mut path_to_config: String) {
           "-drive", format!("file={},if=ide,index=1,media=cdrom", vm_config.install.boot_iso.display() ).as_str(),
 
           // Attach drivers
-          "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
+          // "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
 
           //"-boot", "d", // c == first hd, d == first cd-rom drive
 
