@@ -18,20 +18,16 @@ fn main() {
     return dump_help();
   }
   else {
-    let first_arg = &args[1];
+    let first_arg = args[1].clone();
 
-    if first_arg.ends_with(".toml") {
-      let rt = tokio::runtime::Builder::new_multi_thread()
-        .enable_all()
-        .worker_threads(2)
-        .build()
-        .expect("Could not build tokio runtime!");
+    let rt = tokio::runtime::Builder::new_multi_thread()
+      .enable_all()
+      .worker_threads(2)
+      .build()
+      .expect("Could not build tokio runtime!");
 
-      return rt.block_on(vm_manager(first_arg));
-    }
-    else {
-      println!("TODO build client system to handle arg {}", first_arg);
-    }
+    return rt.block_on(vm_manager(first_arg));
+
   }
 }
 
@@ -124,7 +120,18 @@ static QEMU_PROC_PID: once_cell::sync::Lazy<std::sync::atomic::AtomicI32> = once
 );
 
 
-async fn vm_manager(path_to_config: &str) {
+async fn vm_manager(mut path_to_config: String) {
+
+  if ! std::path::Path::new(&path_to_config).exists() {
+    // Scan under /j/bins/azure-contain/containers for a file containing this & use that
+    let mut containers_dir_o = dump_error_and_ret!( tokio::fs::read_dir("/j/bins/azure-vm/vms").await );
+    while let Some(container_toml) = dump_error_and_ret!( containers_dir_o.next_entry().await ) {
+      if container_toml.file_name().into_string().unwrap_or_default().contains(&path_to_config) {
+        path_to_config = container_toml.path().into_os_string().into_string().unwrap_or_default();
+        break;
+      }
+    }
+  }
 
   let _signal_task = tokio::spawn(handle_exit_signals());
 
