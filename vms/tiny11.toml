@@ -1,7 +1,7 @@
 
 [install]
-boot_iso_url = "https://ia804703.us.archive.org/10/items/tiny-11_202302/tiny11%20b1.iso"
-boot_iso = "/j/downloads/tiny11 b1.iso"
+boot_iso_url = "https://archive.org/download/tiny-11-NTDEV/tiny11a64%20r1.iso"
+boot_iso = "/mnt/scratch/vms/tiny11-b1.iso"
 
 [vm]
 name = "Tiny11"
