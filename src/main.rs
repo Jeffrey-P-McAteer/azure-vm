@@ -172,14 +172,16 @@ async fn vm_manager(mut path_to_config: String) {
   
   println!("vm_config={:?}", vm_config);
 
-  if vm_config.install.boot_iso.exists() {
-    // Touch install media assuming it's under downloads
-    dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
-  }
-  else {
-    // Download it from vm_config.install.boot_iso_url
-    ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
-  }
+  // if vm_config.install.boot_iso.exists() {
+  //   // Touch install media assuming it's under downloads
+  //   dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
+  // }
+  // else {
+  //   // Download it from vm_config.install.boot_iso_url
+  //   ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
+  // }
+  ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
+  dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
 
   // If the disk image does not exist, create dirs + then the image in qcow2 format
   if ! vm_config.vm.disk_image.exists() {
