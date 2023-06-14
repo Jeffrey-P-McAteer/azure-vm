@@ -270,40 +270,45 @@ async fn vm_manager(mut path_to_config: String) {
     dump_error!( tokio::fs::remove_file(&qmp_socket).await );
   }
 
+  let qemu_args: Vec<String> = vec![
+    "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
+    "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
+    "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+    "-smp".into(), "2".into(),
+    "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
+
+    "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),
+
+    // Possible CAC reader fwd ( lsusb -t )
+    "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
+
+    // Use pulse API to talk to pipewire
+    "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+
+    // Hmmm... likely want more config in future.
+    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
+
+    // Assume guest drivers are installed during install phase, use spice UI
+    "-vga".into(), "qxl".into(),
+    "-device".into(), "virtio-serial-pci".into(),
+
+    "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
+      format!("unix=on,addr={},gl=on,rendernode=/dev/dri/by-path/pci-0000:00:02.0-render,disable-ticketing=on", spice_socket.display() ),
+
+    "-device".into(), "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0".into(),
+    "-chardev".into(), "spicevmc,id=spicechannel0,name=vdagent".into(),
+
+    "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
+
+    "-boot".into(), "c".into(), // c == first hd, d == first cd-rom drive
+
+  ];
+
+  let debug_qemu_args = qemu_args.join(" ");
+  println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+
   let mut qemu_proc = tokio::process::Command::new("qemu-system-x86_64")
-        .args(&[
-          "-drive", format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ).as_str(),
-          "-enable-kvm", "-m", format!("{}M", vm_config.vm.ram_mb ).as_str(),
-          "-cpu", "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time",
-          "-smp", "2",
-          "-machine", "type=pc,accel=kvm,kernel_irqchip=on",
-
-          "-qmp", format!("unix:{},server=on,wait=off", qmp_socket.display() ).as_str(),
-
-          // Possible CAC reader fwd ( lsusb -t )
-          "-usb", "-device", "usb-host,hostbus=1,hostport=2",
-
-          // Use pulse API to talk to pipewire
-          "-audiodev", "id=pa,driver=pa,server=/run/user/1000/pulse/native",
-
-          // Hmmm... likely want more config in future.
-          "-nic", "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10",
-
-          // Assume guest drivers are installed during install phase, use spice UI
-          "-vga", "qxl",
-          "-device", "virtio-serial-pci",
-
-          "-spice", // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
-            format!("unix=on,addr={},gl=on,rendernode=/dev/dri/by-path/pci-0000:00:02.0-render,disable-ticketing=on", spice_socket.display() ).as_str(),
-
-          "-device", "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0",
-          "-chardev", "spicevmc,id=spicechannel0,name=vdagent",
-
-          "-drive", format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ).as_str(),
-
-          "-boot", "c", // c == first hd, d == first cd-rom drive
-
-        ])
+        .args(&qemu_args)
         .spawn()
         .expect("Could not spawn child proc");
 

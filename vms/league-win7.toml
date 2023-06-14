@@ -1,7 +1,9 @@
 
 [install]
-boot_iso_url = "https://archive.org/download/Windows7-iso/win7_64_bit.iso"
-boot_iso = "/mnt/scratch/vms/win7_64_bit.iso"
+#boot_iso_url = "https://archive.org/download/Windows7-iso/win7_64_bit.iso"
+#boot_iso = "/mnt/scratch/vms/win7_64_bit.iso"
+boot_iso_url = "https://ss2.softlay.com/files/en_windows_7_ultimate_x64_dvd.iso"
+boot_iso = "/mnt/scratch/vms/en_windows_7_ultimate_x64_dvd.iso"
 
 [vm]
 name = "League-Win7"
