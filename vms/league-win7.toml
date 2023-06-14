@@ -1,0 +1,14 @@
+
+[install]
+boot_iso_url = "https://archive.org/download/Windows7-iso/win7_64_bit.iso"
+boot_iso = "/mnt/scratch/vms/win7_64_bit.iso"
+
+[vm]
+name = "League-Win7"
+mount_windows_virtio_iso = true
+disk_image = "/mnt/scratch/vms/league-win7.qcow2"
+disk_image_gb = 146
+ram_mb = 9096
+
+
+
