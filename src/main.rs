@@ -284,7 +284,7 @@ async fn vm_manager(mut path_to_config: String) {
 
     // Use pulse API to talk to pipewire
     "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
-
+    
     // Hmmm... likely want more config in future.
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
