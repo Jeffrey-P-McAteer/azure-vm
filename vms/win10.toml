@@ -1,0 +1,15 @@
+
+[install]
+boot_iso_url = ""
+boot_iso = "/mnt/scratch/vms/Win10_22H2_English_x64v1.iso"
+
+
+[vm]
+name = "League-Win10"
+mount_windows_virtio_iso = true
+disk_image = "/mnt/scratch/vms/league-win10.qcow2"
+disk_image_gb = 146
+ram_mb = 9096
+
+
+
