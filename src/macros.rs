@@ -4,7 +4,7 @@
 macro_rules! dump_error {
   ($e:expr) => {
     if let Err(err) = $e {
-      eprintln!("ERROR {}:{}> {:?}", err, file!(), line!());
+      eprintln!("ERROR {}:{}> {:?}", file!(), line!(), err,);
     }
   }
 }
@@ -15,7 +15,7 @@ macro_rules! dump_error_async {
   ($e:expr) => {
     async {
       if let Err(err) = $e.await {
-        eprintln!("ERROR {}:{}> {:?}", err, file!(), line!());
+        eprintln!("ERROR {}:{}> {:?}", file!(), line!(), err,);
       }
     }
   }
@@ -27,7 +27,7 @@ macro_rules! dump_error_and_ret {
   ($e:expr) => {
     match $e {
       Err(err) => {
-        eprintln!("ERROR {}:{}> {:?}", err, file!(), line!());
+        eprintln!("ERROR {}:{}> {:?}", file!(), line!(), err,);
         return;
       }
       Ok(val) => val
