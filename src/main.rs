@@ -290,13 +290,14 @@ async fn vm_manager(mut path_to_config: String) {
     // Use pulse API to talk to pipewire
     //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
     "-audiodev".into(), "id=alsa,driver=alsa".into(), // yay -S qemu-audio-alsa
+    "-device".into(), "intel-hda".into(), "-device".into(), "hda-output,audiodev=alsa".into(), // frontend HW presented to VM
     
     // Hmmm... likely want more config in future.
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
-    "-device".into(), "virtio-gpu-pci,virgl=on,gl=on".into(),
-    //"-device".into(), "virtio-serial-pci".into(),
+    // "-device".into(), "virtio-gpu-pci".into(),
+    "-device".into(), "virtio-serial-pci".into(),
 
     "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
       format!("unix=on,addr={},gl=on,rendernode=/dev/dri/by-path/pci-0000:00:02.0-render,disable-ticketing=on", spice_socket.display() ),
