@@ -279,13 +279,13 @@ async fn vm_manager(mut path_to_config: String) {
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), "host".into(),
-    "-smp".into(), "4".into(),
+    "-smp".into(), "2".into(),
     "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
     "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),
 
     // Possible CAC reader fwd ( lsusb -t )
-    "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
+    // "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
 
     // Use pulse API to talk to pipewire
     //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
@@ -295,7 +295,7 @@ async fn vm_manager(mut path_to_config: String) {
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
-    "-device".into(), "virtio-gpu-pci".into(),
+    "-device".into(), "virtio-gpu-pci,virgl=on,gl=on".into(),
     //"-device".into(), "virtio-serial-pci".into(),
 
     "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
