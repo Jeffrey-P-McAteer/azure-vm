@@ -295,8 +295,8 @@ async fn vm_manager(mut path_to_config: String) {
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
-    "-vga".into(), "qxl".into(),
-    "-device".into(), "virtio-serial-pci".into(),
+    "-device".into(), "virtio-gpu-pci".into(),
+    //"-device".into(), "virtio-serial-pci".into(),
 
     "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
       format!("unix=on,addr={},gl=on,rendernode=/dev/dri/by-path/pci-0000:00:02.0-render,disable-ticketing=on", spice_socket.display() ),
