@@ -277,7 +277,8 @@ async fn vm_manager(mut path_to_config: String) {
   let qemu_args: Vec<String> = vec![
     "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
-    "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+    //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+    "-cpu".into(), "host".into(),
     "-smp".into(), "4".into(),
     "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
@@ -287,7 +288,8 @@ async fn vm_manager(mut path_to_config: String) {
     "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
 
     // Use pulse API to talk to pipewire
-    "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+    //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+    "-audiodev".into(), "id=alsa,driver=alsa".into(), // yay -S qemu-audio-alsa
     
     // Hmmm... likely want more config in future.
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
@@ -319,7 +321,7 @@ async fn vm_manager(mut path_to_config: String) {
   let qemu_pid = qemu_proc.id().unwrap_or(0);
   QEMU_PROC_PID.store(qemu_pid as i32, std::sync::atomic::Ordering::SeqCst);
 
-  tokio::time::sleep(tokio::time::Duration::from_millis(250)).await;
+  tokio::time::sleep(tokio::time::Duration::from_millis(1200)).await;
 
   let mut input_lines = tokio::io::BufReader::new(tokio::io::stdin()).lines();
 
@@ -343,19 +345,20 @@ async fn vm_manager(mut path_to_config: String) {
 
     let line = line.trim();
 
-    if line == "gui" {
-      println!("Launching SPICE client...");
-      dump_error!(
-        tokio::process::Command::new("spicy")
-          .args(&[
-            format!("--uri=spice+unix://{}", spice_socket.display()).as_str()
-          ])
-          .status()
-          .await
-      );
-    }
-    else if line == "help" {
-      println!(r#"Commands:
+    if line.len() > 0 {
+      if line == "gui" {
+        println!("Launching SPICE client...");
+        dump_error!(
+          tokio::process::Command::new("spicy")
+            .args(&[
+              format!("--uri=spice+unix://{}", spice_socket.display()).as_str()
+            ])
+            .status()
+            .await
+        );
+      }
+      else if line == "help" {
+        println!(r#"Commands:
   - gui
       Opens SPICE client
   - help
@@ -365,23 +368,24 @@ async fn vm_manager(mut path_to_config: String) {
   - *
       Run as command in VM, returning output.
 "#);
-    }
-    else if line == "quit" || line == "exit" {
-      break;
-    }
-    else {
-      // Connect to QMP and send line in verbatim
-      println!("Sending to QMP: {}", line);
-
-      match qga.execute(qapi::qga::guest_info { }).await {
-        Ok(info) => {
-          println!("Guest Agent version: {}", info.version);
-        }
-        Err(e) => {
-          println!("Error: {:?}", e);
-        }
       }
+      else if line == "quit" || line == "exit" {
+        break;
+      }
+      else {
+        // Connect to QMP and send line in verbatim
+        println!("Sending to QMP: {}", line);
 
+        match qga.execute(qapi::qga::guest_info { }).await {
+          Ok(info) => {
+            println!("Guest Agent version: {}", info.version);
+          }
+          Err(e) => {
+            println!("Error: {:?}", e);
+          }
+        }
+
+      }
 
     }
 
