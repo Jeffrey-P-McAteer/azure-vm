@@ -220,6 +220,7 @@ async fn vm_manager(mut path_to_config: String) {
     println!("");
 
     let qemu_args: Vec<String> = vec![
+      "-bios".into(), "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into(),
       "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
       "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
       "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
@@ -275,6 +276,7 @@ async fn vm_manager(mut path_to_config: String) {
   }
 
   let qemu_args: Vec<String> = vec![
+    "-bios".into(), "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into(),
     "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
