@@ -1,16 +1,17 @@
 
 [install]
-boot_iso_url = ""
 boot_iso = "/mnt/scratch/vms/Win10_22H2_English_x64v1.iso"
 
 
 [vm]
 name = "League-Win10"
 mount_windows_virtio_iso = true
-disk_image = "/mnt/scratch/vms/league-win10.qcow2"
-disk_image_gb = 146
-#ram_mb = 9096
-ram_mb = 12256
+# disk_image = "/mnt/scratch/vms/league-win10.qcow2"
+# disk_image_gb = 146
+disk_partuuid = "f26e2d08-0f10-11ee-b535-525400123456" # Looked up + the disk holding this partition is what's booted.
+ram_mb = 9696
 
+# Appended to qemu command
+addtl_args = []
 
 
