@@ -3,7 +3,7 @@ use tokio::io::AsyncBufReadExt;
 use tokio::io::AsyncWriteExt;
 
 use std::io::Write;
-
+use std::path::PathBuf;
 
 mod structs;
 use structs::*;
@@ -176,19 +176,15 @@ async fn vm_manager(mut path_to_config: String) {
   
   println!("vm_config={:?}", vm_config);
 
-  // if vm_config.install.boot_iso.exists() {
-  //   // Touch install media assuming it's under downloads
-  //   dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
-  // }
-  // else {
-  //   // Download it from vm_config.install.boot_iso_url
-  //   ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
-  // }
-  ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
-  dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
+  let vm_is_physical_disk = vm_config.vm.disk_partuuid.len() > 1;
+
+  if !vm_is_physical_disk {
+    ensure_file_downloaded(&vm_config.install.boot_iso_url, &vm_config.install.boot_iso).await;
+    dump_error!( filetime::set_file_mtime(&vm_config.install.boot_iso, filetime::FileTime::now()) );
+  }
 
   // If the disk image does not exist, create dirs + then the image in qcow2 format
-  if ! vm_config.vm.disk_image.exists() {
+  if !vm_is_physical_disk && ! vm_config.vm.disk_image.exists() {
     if let Some(vm_image_dir) = vm_config.vm.disk_image.parent() {
       println!("Ensuring {} exists...", vm_image_dir.display());
       dump_error!( tokio::fs::create_dir_all(vm_image_dir).await );
@@ -204,63 +200,63 @@ async fn vm_manager(mut path_to_config: String) {
 
   }
 
-  // if vm_config.vm.mount_windows_virtio_iso {
-  //   ensure_virtio_win_iso_exists().await; // Now we can ensure passing VIRTIO_WIN_ISO_LOCAL_PATH is safe
-  // }
   ensure_virtio_win_iso_exists().await;
 
-  let install_flag = vm_config.vm.flag_path(".installed");
-  println!("install_flag = {:?}", install_flag);
+  if ! vm_is_physical_disk {
+    // Check for install
+    let install_flag = vm_config.vm.flag_path(".installed");
+    println!("install_flag = {:?}", install_flag);
 
-  if ! install_flag.exists() {
-    println!("");
-    println!("install_flag file {:?} does not exist, launching w/ install media connected.", install_flag);
-    println!("Please install the OS and then run: ");
-    println!("  touch {:?}", install_flag);
-    println!("");
+    if ! install_flag.exists() {
+      println!("");
+      println!("install_flag file {:?} does not exist, launching w/ install media connected.", install_flag);
+      println!("Please install the OS and then run: ");
+      println!("  touch {:?}", install_flag);
+      println!("");
 
-    let qemu_args: Vec<String> = vec![
-      "-bios".into(), "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into(),
-      "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
-      "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
-      "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
-      "-smp".into(), "2".into(),
-      "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
+      let qemu_args: Vec<String> = vec![
+        "-bios".into(), "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into(),
+        "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
+        "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
+        "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+        "-smp".into(), "2".into(),
+        "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
-      // Possible CAC reader fwd ( lsusb -t )
-      "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
+        // Possible CAC reader fwd ( lsusb -t )
+        "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
 
-      // Use pulse API to talk to pipewire
-      "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+        // Use pulse API to talk to pipewire
+        "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
 
-      // Hmmm... likely want more config in future.
-      "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
+        // Hmmm... likely want more config in future.
+        "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
-      "-device".into(), "virtio-vga".into(), // gl=on,max_outputs=1 where do these get set ???
-      "-display".into(), "gtk".into(),
+        "-device".into(), "virtio-vga".into(), // gl=on,max_outputs=1 where do these get set ???
+        "-display".into(), "gtk".into(),
 
-      // Attach boot ISO
-      "-drive".into(), format!("file={},if=ide,index=1,media=cdrom", vm_config.install.boot_iso.display() ),
+        // Attach boot ISO
+        "-drive".into(), format!("file={},if=ide,index=1,media=cdrom", vm_config.install.boot_iso.display() ),
 
-      // Attach drivers
-      "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
+        // Attach drivers
+        "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
 
-      //"-boot", "d", // c == first hd, d == first cd-rom drive
+        //"-boot", "d", // c == first hd, d == first cd-rom drive
 
-      "-boot".into(), "menu=on,splash-time=18".into(),
+        "-boot".into(), "menu=on,splash-time=18".into(),
 
-    ];
+      ];
 
-    let debug_qemu_args = qemu_args.join(" ");
-    println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+      let debug_qemu_args = qemu_args.join(" ");
+      println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
 
-    dump_error!(
-      tokio::process::Command::new("qemu-system-x86_64")
-        .args(&qemu_args)
-        .status()
-        .await
-    );
-    return;
+      dump_error!(
+        tokio::process::Command::new("qemu-system-x86_64")
+          .args(&qemu_args)
+          .status()
+          .await
+      );
+      return;
+    }
   }
 
   // Now run the regular VM
@@ -275,9 +271,28 @@ async fn vm_manager(mut path_to_config: String) {
     dump_error!( tokio::fs::remove_file(&qmp_socket).await );
   }
 
-  let qemu_args: Vec<String> = vec![
+  let vm_root_drive_arg: String;
+  if vm_is_physical_disk {
+    // Lookup disk holding vm_config.vm.disk_partuuid, and check if it exists.
+    let dev_rel_link = PathBuf::from(format!("/dev/disk/by-partuuid/{}", &vm_config.vm.disk_partuuid));
+    let mut dev_reg_path = tokio::fs::canonicalize(dev_rel_link).await.expect("Cannot find disk_partuuid! is it connected?");
+    // trim last char in dev_reg_path assuming it's a partition, then see if it exists.
+    let dev_part_name = dev_reg_path.file_name().expect("No file name!");
+    let mut dev_part_name = dev_part_name.to_str().expect("Bad file name!").to_owned();
+    dev_part_name.pop(); // remove last character, eg "sda2" becomes "sda"
+
+    dev_reg_path.set_file_name(dev_part_name);
+
+    vm_root_drive_arg = format!("format=raw,file={}", dev_reg_path.display() );
+
+  }
+  else {
+    vm_root_drive_arg = format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
+  }
+
+  let mut qemu_args: Vec<String> = vec![
     "-bios".into(), "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into(),
-    "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
+    "-drive".into(), vm_root_drive_arg,
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), "host".into(),
@@ -312,6 +327,9 @@ async fn vm_manager(mut path_to_config: String) {
     "-boot".into(), "c".into(), // c == first hd, d == first cd-rom drive
 
   ];
+
+  qemu_args.extend(vm_config.vm.addtl_args);
+  let qemu_args = qemu_args;
 
   let debug_qemu_args = qemu_args.join(" ");
   println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
