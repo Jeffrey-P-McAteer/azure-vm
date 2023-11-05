@@ -34,7 +34,7 @@ fn main() {
 fn dump_help() {
   println!(r#"Usage:
   {exe} /path/to/vm.toml
-    
+
     Runs the VM
 
   {exe} TODO more runtime VM control stuff
@@ -131,7 +131,7 @@ async fn handle_exit_signals() {
 
 async fn do_shutdown() {
   println!("Got SIG{{TERM/INT}}, shutting down!");
-  
+
   let qemu_pid = QEMU_PROC_PID.load(std::sync::atomic::Ordering::SeqCst);
   if qemu_pid > 3 {
     for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
@@ -173,7 +173,7 @@ async fn vm_manager(mut path_to_config: String) {
   println!("Reading {}", &path_to_config);
   let vm_file_content = tokio::fs::read_to_string(path_to_config).await.expect("Could not read config file!");
   let vm_config: VMConfig = toml::from_str(&vm_file_content).expect("Could not parse config!");
-  
+
   println!("vm_config={:?}", vm_config);
 
   let vm_is_physical_disk = vm_config.vm.disk_partuuid.len() > 1;
@@ -308,9 +308,9 @@ async fn vm_manager(mut path_to_config: String) {
     //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
     "-audiodev".into(), "id=alsa,driver=alsa".into(), // yay -S qemu-audio-alsa
     "-device".into(), "intel-hda".into(), "-device".into(), "hda-output,audiodev=alsa".into(), // frontend HW presented to VM
-    
+
     // Hmmm... likely want more config in future.
-    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
+    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp::3389-:3389,udp:3389::3389".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
     // "-device".into(), "virtio-gpu-pci".into(),
@@ -321,6 +321,8 @@ async fn vm_manager(mut path_to_config: String) {
 
     "-device".into(), "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0".into(),
     "-chardev".into(), "spicevmc,id=spicechannel0,name=vdagent".into(),
+
+    // "-vga".into(), "virtio".into(), // alternatively; -vga std?
 
     "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
 
@@ -378,10 +380,27 @@ async fn vm_manager(mut path_to_config: String) {
             .await
         );
       }
-      else if line == "help" {
+      else if line == "rdp" {
+        dump_error!(
+          tokio::process::Command::new("xfreerdp")
+            .args(&[
+              "/cert-ignore",
+              "/w:1280", "/h:800",
+              "/drive:DOWNLOADS,/j/downloads",
+              "/u:jeffrey",
+              "/p:Passw0rd!",
+              "/v:127.0.0.1"
+            ])
+            .status()
+            .await
+        );
+      }
+      else if line == "help" || line == "h" {
         println!(r#"Commands:
   - gui
       Opens SPICE client
+  - rdp
+      Opens RDP client to 127.0.0.1:3389
   - help
       Show this help
   - exit / quit
