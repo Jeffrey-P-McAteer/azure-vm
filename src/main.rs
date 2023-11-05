@@ -310,7 +310,7 @@ async fn vm_manager(mut path_to_config: String) {
     "-device".into(), "intel-hda".into(), "-device".into(), "hda-output,audiodev=alsa".into(), // frontend HW presented to VM
 
     // Hmmm... likely want more config in future.
-    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp::3389-:3389,udp:3389::3389".into(),
+    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp::3389-:3389,hostfwd=udp::3389-:3389".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
     // "-device".into(), "virtio-gpu-pci".into(),
@@ -384,9 +384,10 @@ async fn vm_manager(mut path_to_config: String) {
         dump_error!(
           tokio::process::Command::new("xfreerdp")
             .args(&[
-              "/cert-ignore",
+              "/cert:ignore",
               "/w:1280", "/h:800",
               "/drive:DOWNLOADS,/j/downloads",
+              "/dynamic-resolution",
               "/u:jeffrey",
               "/p:Passw0rd!",
               "/v:127.0.0.1"
