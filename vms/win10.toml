@@ -12,6 +12,11 @@ disk_partuuid = "f26e2d08-0f10-11ee-b535-525400123456" # Looked up + the disk ho
 ram_mb = 9696
 
 # Appended to qemu command
-addtl_args = []
+addtl_args = [
+  # lsusb -t
+  #"-usb", "-device", "usb-host,vendorid=058f,productid=9540"
+  "-usb", "-device", "usb-host,vendorid=1423,productid=38208"
+]
+
 
 
