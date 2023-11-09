@@ -19,7 +19,7 @@ pub struct VMInstallBlock {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VMBlock {
   pub name: String,
-  
+
   #[serde(default = "dev_null_pathbuf")]
   pub disk_image: PathBuf,
   #[serde(default = "zero_usize")]
@@ -35,6 +35,11 @@ pub struct VMBlock {
 
   #[serde(default = "empty_vec_string")]
   pub addtl_args: Vec<String>,
+
+  #[serde(default = "empty_string")]
+  pub rdp_uname: String,
+  #[serde(default = "empty_string")]
+  pub rdp_pass: String,
 
 }
 

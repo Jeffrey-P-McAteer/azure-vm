@@ -388,8 +388,8 @@ async fn vm_manager(mut path_to_config: String) {
               "/w:1280", "/h:800",
               "/drive:DOWNLOADS,/j/downloads",
               "/dynamic-resolution",
-              "/u:jeffrey",
-              "/p:Passw0rd!",
+              format!("/u:{}", vm_config.vm.rdp_uname).as_str(),
+              format!("/p:{}", vm_config.vm.rdp_pass).as_str(),
               "/v:127.0.0.1"
             ])
             .status()

@@ -19,4 +19,6 @@ addtl_args = [
 ]
 
 
+rdp_uname = "jeffrey"
+rdp_pass = "Passw0rd!"
 
