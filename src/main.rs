@@ -381,17 +381,24 @@ async fn vm_manager(mut path_to_config: String) {
         );
       }
       else if line == "rdp" {
+        let mut rdp_args: Vec<String> = vec![];
+
+        rdp_args.push("/cert:ignore".to_string());
+        rdp_args.push("/w:1280".to_string());
+        rdp_args.push("/h:800".to_string());
+        rdp_args.push("/drive:DOWNLOADS,/j/downloads".to_string());
+        rdp_args.push("/dynamic-resolution".to_string());
+        rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
+        rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
+        rdp_args.push("/v:127.0.0.1".to_string());
+
+        rdp_args.extend(vm_config.vm.addtl_rdp_args.clone());
+
+        let rdp_args = rdp_args;
+
         dump_error!(
           tokio::process::Command::new("xfreerdp")
-            .args(&[
-              "/cert:ignore",
-              "/w:1280", "/h:800",
-              "/drive:DOWNLOADS,/j/downloads",
-              "/dynamic-resolution",
-              format!("/u:{}", vm_config.vm.rdp_uname).as_str(),
-              format!("/p:{}", vm_config.vm.rdp_pass).as_str(),
-              "/v:127.0.0.1"
-            ])
+            .args(&rdp_args)
             .status()
             .await
         );

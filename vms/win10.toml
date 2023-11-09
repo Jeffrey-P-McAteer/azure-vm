@@ -15,10 +15,13 @@ ram_mb = 9696
 addtl_args = [
   # lsusb -t
   #"-usb", "-device", "usb-host,vendorid=058f,productid=9540"
-  "-usb", "-device", "usb-host,vendorid=1423,productid=38208"
+  "-usb", "-device", "usb-host,vendorid=1423,productid=38208",
 ]
 
 
 rdp_uname = "jeffrey"
 rdp_pass = "Passw0rd!"
 
+addtl_rdp_args = [
+  "/smartcard:Alcor Micro AU9540 00 00",
+]
