@@ -246,15 +246,50 @@ async fn vm_manager(mut path_to_config: String) {
 
       ];
 
-      let debug_qemu_args = qemu_args.join(" ");
-      println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+      if vm_config.vm.ram_mb <= 8000 {
+        let debug_qemu_args = qemu_args.join(" ");
+        println!(">>>");
+        println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+        println!(">>>");
 
-      dump_error!(
-        tokio::process::Command::new("qemu-system-x86_64")
-          .args(&qemu_args)
-          .status()
-          .await
-      );
+        dump_error!(
+          tokio::process::Command::new("qemu-system-x86_64")
+            .args(&qemu_args)
+            .status()
+            .await
+        );
+      }
+      else {
+        // Throw inside systemd-run and limit real ram to 8000mb
+
+        let mut systemd_run_args: Vec<String> = vec![];
+
+        systemd_run_args.push("--scope".to_string());
+
+        systemd_run_args.push("-p".to_string());
+        systemd_run_args.push("MemoryHigh=8G".to_string());
+
+        systemd_run_args.push("-p".to_string());
+        systemd_run_args.push("MemorySwapMax=999G".to_string());
+
+        systemd_run_args.push("--user".to_string());
+        systemd_run_args.push("qemu-system-x86_64".to_string());
+
+        systemd_run_args.extend(qemu_args);
+
+        let debug_systemd_run_args = systemd_run_args.join(" ");
+        println!(">>>");
+        println!(">>> systemd-run {}", debug_systemd_run_args);
+        println!(">>>");
+
+        dump_error!(
+          tokio::process::Command::new("systemd-run")
+            .args(&systemd_run_args)
+            .status()
+            .await
+        );
+
+      }
       return;
     }
   }
@@ -333,13 +368,67 @@ async fn vm_manager(mut path_to_config: String) {
   qemu_args.extend(vm_config.vm.addtl_args);
   let qemu_args = qemu_args;
 
-  let debug_qemu_args = qemu_args.join(" ");
-  println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+  let mut qemu_proc = if vm_config.vm.ram_mb <= 8000 {
+    let debug_qemu_args = qemu_args.join(" ");
+    println!(">>>");
+    println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
+    println!(">>>");
 
-  let mut qemu_proc = tokio::process::Command::new("qemu-system-x86_64")
-        .args(&qemu_args)
+    tokio::process::Command::new("qemu-system-x86_64")
+          .args(&qemu_args)
+          .spawn()
+          .expect("Could not spawn child proc")
+  }
+  else {
+    // Throw inside systemd-run and limit real ram to 8000mb
+
+    let mut systemd_run_args: Vec<String> = vec![];
+
+    systemd_run_args.push("--scope".to_string());
+
+    systemd_run_args.push("-p".to_string());
+    systemd_run_args.push("MemoryHigh=8G".to_string());
+
+    systemd_run_args.push("-p".to_string());
+    systemd_run_args.push("MemorySwapMax=999G".to_string());
+
+    systemd_run_args.push("--user".to_string());
+    systemd_run_args.push("qemu-system-x86_64".to_string());
+
+    systemd_run_args.extend(qemu_args);
+
+    let debug_systemd_run_args = systemd_run_args.join(" ");
+    println!(">>>");
+    println!(">>> systemd-run {}", debug_systemd_run_args);
+    println!(">>>");
+
+    // Attempt to swapon another 16gb of ram iff it exists on /mnt/scratch/
+    for swap_n in 1..4 {
+      dump_error!(
+        tokio::process::Command::new("sudo")
+          .args(&[
+            "swapon",
+            format!("/mnt/scratch/swap-files/swap-{}", swap_n).as_str(),
+          ])
+          .status()
+          .await
+      );
+      dump_error!(
+        tokio::process::Command::new("sudo")
+          .args(&[
+            "swapon",
+            format!("/mnt/azure-data/swap-files/swap-{}", swap_n).as_str(),
+          ])
+          .status()
+          .await
+      );
+    }
+
+    tokio::process::Command::new("systemd-run")
+        .args(&systemd_run_args)
         .spawn()
-        .expect("Could not spawn child proc");
+        .expect("Could not spawn child proc")
+  };
 
   let qemu_pid = qemu_proc.id().unwrap_or(0);
   QEMU_PROC_PID.store(qemu_pid as i32, std::sync::atomic::Ordering::SeqCst);
