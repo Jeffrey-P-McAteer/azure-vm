@@ -7,7 +7,7 @@ boot_iso = "/mnt/scratch/vms/tiny11-b1.iso"
 name = "Tiny11"
 mount_windows_virtio_iso = true
 disk_image = "/mnt/scratch/vms/tiny11.qcow2"
-disk_image_gb = 32
+disk_image_gb = 48
 ram_mb = 8096
 
 
