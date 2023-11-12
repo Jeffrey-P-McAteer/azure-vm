@@ -469,7 +469,7 @@ async fn vm_manager(mut path_to_config: String) {
             .await
         );
       }
-      else if line == "rdp" {
+      else if line.starts_with("rdp") {
         let mut rdp_args: Vec<String> = vec![];
 
         rdp_args.push("/cert:ignore".to_string());
@@ -477,13 +477,39 @@ async fn vm_manager(mut path_to_config: String) {
         rdp_args.push("/h:800".to_string());
         rdp_args.push("/drive:DOWNLOADS,/j/downloads".to_string());
         rdp_args.push("/dynamic-resolution".to_string());
-        rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
-        rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
+        if vm_config.vm.rdp_uname.len() > 0 {
+          rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
+        }
+        if vm_config.vm.rdp_pass.len() > 0 {
+          rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
+        }
         rdp_args.push("/v:127.0.0.1".to_string());
+
+        if let Some(cmd_exe) = line.split(" ").nth(1) {
+          println!("cmd_exe = {:?}", cmd_exe);
+          rdp_args.push(format!("/app:{}", cmd_exe));
+
+          // Append up to 10 args
+          let mut cmd_arg_args = cmd_exe.to_string();
+          for i in 2..12 {
+            if let Some(cmd_arg) = line.split(" ").nth(i) {
+              // println!("cmd_arg = {:?}", cmd_arg);
+              cmd_arg_args += &(" ".to_string() + cmd_arg);
+            }
+          }
+          if cmd_arg_args.len() > 0 {
+            rdp_args.push(format!("/app-cmd:{}", cmd_arg_args));
+          }
+        }
 
         rdp_args.extend(vm_config.vm.addtl_rdp_args.clone());
 
         let rdp_args = rdp_args;
+
+        {
+          let debug_rdp_args = rdp_args.join(" ");
+          println!("xfreerdp {}", debug_rdp_args );
+        }
 
         dump_error!(
           tokio::process::Command::new("xfreerdp")
