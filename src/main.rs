@@ -473,8 +473,10 @@ async fn vm_manager(mut path_to_config: String) {
         let mut rdp_args: Vec<String> = vec![];
 
         rdp_args.push("/cert:ignore".to_string());
-        rdp_args.push("/w:1280".to_string());
-        rdp_args.push("/h:800".to_string());
+        //rdp_args.push("/w:1280".to_string());
+        //rdp_args.push("/h:800".to_string());
+        rdp_args.push("/w:1920".to_string());
+        rdp_args.push("/h:1080".to_string());
         rdp_args.push("/drive:DOWNLOADS,/j/downloads".to_string());
         rdp_args.push("/dynamic-resolution".to_string());
         if vm_config.vm.rdp_uname.len() > 0 {
@@ -508,11 +510,11 @@ async fn vm_manager(mut path_to_config: String) {
 
         {
           let debug_rdp_args = rdp_args.join(" ");
-          println!("xfreerdp {}", debug_rdp_args );
+          println!("wlfreerdp {}", debug_rdp_args );
         }
 
         dump_error!(
-          tokio::process::Command::new("xfreerdp")
+          tokio::process::Command::new("wlfreerdp")
             .args(&rdp_args)
             .status()
             .await
