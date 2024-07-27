@@ -445,7 +445,7 @@ async fn vm_manager(mut path_to_config: String) {
   let (qga, handle) = qapi_stream.spawn_tokio();
 
   let sync_value = &qga as *const _ as usize as i32;
-  dump_error!( qga.guest_sync(sync_value).await );
+  //dump_error!( qga.guest_sync(sync_value).await ); // TODO re-investigate setting this up
 
 
   while let Ok(Some(line)) = input_lines.next_line().await {
