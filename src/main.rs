@@ -508,13 +508,27 @@ async fn vm_manager(mut path_to_config: String) {
 
         let rdp_args = rdp_args;
 
+        let freerdp_bin = match std::env::var("WAYLAND_DISPLAY") {
+          Ok(waland_disp_val) => {
+            if waland_disp_val.len() > 0 {
+              "wlfreerdp"
+            }
+            else {
+              "xfreerdp"
+            }
+          }
+          Err(_) => {
+            "xfreerdp"
+          }
+        };
+
         {
           let debug_rdp_args = rdp_args.join(" ");
-          println!("wlfreerdp {}", debug_rdp_args );
+          println!("{} {}", freerdp_bin, debug_rdp_args );
         }
 
         dump_error!(
-          tokio::process::Command::new("wlfreerdp")
+          tokio::process::Command::new(freerdp_bin)
             .args(&rdp_args)
             .status()
             .await
