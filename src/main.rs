@@ -246,7 +246,7 @@ async fn vm_manager(mut path_to_config: String) {
 
       ];
 
-      if vm_config.vm.ram_mb <= 8000 {
+      if vm_config.vm.ram_mb <= 7000 {
         let debug_qemu_args = qemu_args.join(" ");
         println!(">>>");
         println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
@@ -267,7 +267,7 @@ async fn vm_manager(mut path_to_config: String) {
         systemd_run_args.push("--scope".to_string());
 
         systemd_run_args.push("-p".to_string());
-        systemd_run_args.push("MemoryHigh=8G".to_string());
+        systemd_run_args.push("MemoryHigh=7G".to_string());
 
         systemd_run_args.push("-p".to_string());
         systemd_run_args.push("MemorySwapMax=999G".to_string());
