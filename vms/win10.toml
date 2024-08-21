@@ -15,6 +15,9 @@ ram_mb = 9696
 # Appended to qemu command
 addtl_args = [
   "-device", "qemu-xhci",
+  # From 'in-out-differ lsusb': Bus 003 Device 012: ID 04e6:5116 SCM Microsystems, Inc. SCR331-LC1 / SCR3310 SmartCard Reader
+  #"-usb", "-device", "usb-host,hostbus=003,hostaddr=012"
+  # "-usb", "-device", "usb-host,vendorid=0x04e6,productid=0x5116"
 ]
 
 
