@@ -240,13 +240,13 @@ async fn vm_manager(mut path_to_config: String) {
         // Attach drivers
         "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
 
-        //"-boot", "d", // c == first hd, d == first cd-rom drive
+        "-boot".into(), "d".into(), // c == first hd, d == first cd-rom drive
 
-        "-boot".into(), "menu=on,splash-time=18".into(),
+        //"-boot".into(), "menu=on,splash-time=18".into(),
 
       ];
 
-      if vm_config.vm.ram_mb <= 7000 {
+      if vm_config.vm.ram_mb <= 8000 {
         let debug_qemu_args = qemu_args.join(" ");
         println!(">>>");
         println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
