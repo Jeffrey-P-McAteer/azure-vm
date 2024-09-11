@@ -168,6 +168,11 @@ async fn vm_manager(mut path_to_config: String) {
     }
   }
 
+  let mut sys = sysinfo::System::new_all();
+  sys.refresh_all();
+  let sys_mem_mb = sys.total_memory() / (1024 * 1024);
+  println!("sys_mem_mb = {:?}", sys_mem_mb);
+
   let _signal_task = tokio::spawn(handle_exit_signals());
 
   println!("Reading {}", &path_to_config);
@@ -246,7 +251,9 @@ async fn vm_manager(mut path_to_config: String) {
 
       ];
 
-      if vm_config.vm.ram_mb <= 8000 {
+      // If we request > 1/2 system RAM, limit to just the first 1/2 minus 1gb.
+      let sys_mem_limit_mb = (sys_mem_mb/2) - 1024;
+      if vm_config.vm.ram_mb <= sys_mem_limit_mb as usize {
         let debug_qemu_args = qemu_args.join(" ");
         println!(">>>");
         println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
@@ -267,7 +274,7 @@ async fn vm_manager(mut path_to_config: String) {
         systemd_run_args.push("--scope".to_string());
 
         systemd_run_args.push("-p".to_string());
-        systemd_run_args.push("MemoryHigh=7G".to_string());
+        systemd_run_args.push(format!("MemoryHigh={}M", sys_mem_limit_mb));
 
         systemd_run_args.push("-p".to_string());
         systemd_run_args.push("MemorySwapMax=999G".to_string());
