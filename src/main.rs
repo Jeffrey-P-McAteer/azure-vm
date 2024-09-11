@@ -411,24 +411,28 @@ async fn vm_manager(mut path_to_config: String) {
 
     // Attempt to swapon another 16gb of ram iff it exists on /mnt/scratch/
     for swap_n in 1..4 {
-      dump_error!(
-        tokio::process::Command::new("sudo")
-          .args(&[
-            "swapon",
-            format!("/mnt/scratch/swap-files/swap-{}", swap_n).as_str(),
-          ])
-          .status()
-          .await
-      );
-      dump_error!(
-        tokio::process::Command::new("sudo")
-          .args(&[
-            "swapon",
-            format!("/mnt/azure-data/swap-files/swap-{}", swap_n).as_str(),
-          ])
-          .status()
-          .await
-      );
+      if std::path::Path::new("/mnt/scratch/swap-files").exists() {
+        dump_error!(
+          tokio::process::Command::new("sudo")
+            .args(&[
+              "swapon",
+              format!("/mnt/scratch/swap-files/swap-{}", swap_n).as_str(),
+            ])
+            .status()
+            .await
+        );
+      }
+      if std::path::Path::new("/mnt/azure-data").exists() {
+        dump_error!(
+          tokio::process::Command::new("sudo")
+            .args(&[
+              "swapon",
+              format!("/mnt/azure-data/swap-files/swap-{}", swap_n).as_str(),
+            ])
+            .status()
+            .await
+        );
+      }
     }
 
     tokio::process::Command::new("systemd-run")
