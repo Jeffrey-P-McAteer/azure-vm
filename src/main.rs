@@ -72,7 +72,7 @@ async fn ensure_virtio_win_iso_exists() {
 
 
 async fn ensure_file_downloaded(url: &str, local_file: &std::path::Path) {
-  use futures::StreamExt;
+  // use futures::StreamExt;
 
   if url.len() < 2 {
     return;
