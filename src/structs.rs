@@ -34,6 +34,10 @@ pub struct VMBlock {
 
   #[serde(default = "default_bios_override_val")]
   pub bios_override: String,
+  #[serde(default = "default_spice_gl_override")]
+  pub spice_gl_override: String,
+  #[serde(default = "default_spice_rendernode_override")]
+  pub spice_rendernode_override: String,
 
   pub ram_mb: usize,
 
@@ -90,4 +94,10 @@ fn default_bios_override_val() -> String {
   "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into()
 }
 
+fn default_spice_gl_override() -> String {
+  "on".into() // or "off"
+}
 
+fn default_spice_rendernode_override() -> String {
+  "/dev/dri/by-path/pci-0000:00:02.0-render".into()
+}
