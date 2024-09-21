@@ -36,6 +36,7 @@ addtl_args = [
 #   yay -S swtpm
 #   mkdir -p /tmp/tpm
 #   swtpm socket --tpm2 --tpmstate dir="/tmp/tpm" --ctrl type=unixio,path="/tmp/tpm/swtpm-sock"
+#       while true ; do swtpm socket --tpm2 --tpmstate dir="/tmp/tpm" --ctrl type=unixio,path="/tmp/tpm/swtpm-sock" ; done
   "-chardev", "socket,id=chrtpm,path=/tmp/tpm/swtpm-sock",
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",
