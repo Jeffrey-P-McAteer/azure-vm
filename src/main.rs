@@ -333,7 +333,8 @@ async fn vm_manager(mut path_to_config: String) {
   }
 
   let mut qemu_args: Vec<String> = vec![
-    "-bios".into(), vm_config.vm.bios_override,
+    "-bios".into(), (&vm_config.vm.bios_override).to_string(), // "-bios" MUST always be in this position, b/c we remove these if bios_override.len() < 1
+
     "-drive".into(), vm_root_drive_arg,
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
@@ -371,6 +372,11 @@ async fn vm_manager(mut path_to_config: String) {
     "-boot".into(), "c".into(), // c == first hd, d == first cd-rom drive
 
   ];
+
+  if vm_config.vm.bios_override.len() < 1 {
+    qemu_args.drain(0..2); // Remove "-bios", "" b/c empty string sent in
+  }
+
 
   qemu_args.extend(vm_config.vm.addtl_args);
   let qemu_args = qemu_args;

@@ -14,17 +14,20 @@ ram_mb = 18128
 
 # windows 10/11 wants a BIOS declaring support for secure boot
 # bios_override = "/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd"
+bios_override = ""
 
-spice_gl_override = "off"
+# spice_gl_override = "off"
 
 # Appended to qemu command
 addtl_args = [
   "-device", "qemu-xhci",
-  # From 'in-out-differ lsusb': Bus 003 Device 012: ID 04e6:5116 SCM Microsystems, Inc. SCR331-LC1 / SCR3310 SmartCard Reader
-  #"-usb", "-device", "usb-host,hostbus=003,hostaddr=012"
-  # "-usb", "-device", "usb-host,vendorid=0x04e6,productid=0x5116"
 
-  # "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
+
+  "-machine", "q35",
+  "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd",
+# Remember to run:
+#    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
+  "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
 
 #  "-vga", "std",
 #  "-display", "gtk",
