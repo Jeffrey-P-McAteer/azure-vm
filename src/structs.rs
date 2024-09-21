@@ -31,6 +31,10 @@ pub struct VMBlock {
   #[serde(default = "false_bool")]
   pub mount_windows_virtio_iso: bool,
 
+
+  #[serde(default = "default_bios_override_val")]
+  pub bios_override: String,
+
   pub ram_mb: usize,
 
   #[serde(default = "empty_vec_string")]
@@ -81,4 +85,9 @@ fn false_bool() -> bool {
 fn empty_vec_string() -> Vec<String> {
   vec![]
 }
+
+fn default_bios_override_val() -> String {
+  "/usr/share/edk2-ovmf/x64/OVMF_CODE.fd".into()
+}
+
 

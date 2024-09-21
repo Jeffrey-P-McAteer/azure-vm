@@ -12,6 +12,9 @@ disk_partuuid = "f26e2d08-0f10-11ee-b535-525400123456" # Looked up + the disk ho
 ram_mb = 18128
 #ram_mb = 26256
 
+# windows 10/11 wants a BIOS declaring support for secure boot
+bios_override = "/usr/share/OVMF/x64/OVMF_CODE.secboot.fd"
+
 # Appended to qemu command
 addtl_args = [
   "-device", "qemu-xhci",
