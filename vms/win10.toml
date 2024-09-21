@@ -14,7 +14,8 @@ ram_mb = 18128
 
 # windows 10/11 wants a BIOS declaring support for secure boot
 bios_override = "/usr/share/OVMF/x64/OVMF_CODE.secboot.fd"
-spice_gl_override = "off"
+
+# spice_gl_override = "off"
 
 # Appended to qemu command
 addtl_args = [
@@ -23,8 +24,10 @@ addtl_args = [
   #"-usb", "-device", "usb-host,hostbus=003,hostaddr=012"
   # "-usb", "-device", "usb-host,vendorid=0x04e6,productid=0x5116"
 
-  "-vga", "std",
-  "-display", "gtk"
+#  "-vga", "std",
+#  "-display", "gtk"
+
+  "-global", "ICH9-LPC.disable_s3=1",
 
 ]
 
