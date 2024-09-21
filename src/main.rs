@@ -375,7 +375,9 @@ async fn vm_manager(mut path_to_config: String) {
   qemu_args.extend(vm_config.vm.addtl_args);
   let qemu_args = qemu_args;
 
-  let mut qemu_proc = if vm_config.vm.ram_mb <= 8000 {
+  // If we request > 1/2 system RAM, limit to just the first 1/2 minus 1gb.
+  let sys_mem_limit_mb = (sys_mem_mb/2) - 1024;
+  let mut qemu_proc = if vm_config.vm.ram_mb <= sys_mem_limit_mb as usize {
     let debug_qemu_args = qemu_args.join(" ");
     println!(">>>");
     println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
@@ -387,14 +389,14 @@ async fn vm_manager(mut path_to_config: String) {
           .expect("Could not spawn child proc")
   }
   else {
-    // Throw inside systemd-run and limit real ram to 8000mb
+    // Throw inside systemd-run and limit real ram to sys_mem_limit_mb
 
     let mut systemd_run_args: Vec<String> = vec![];
 
     systemd_run_args.push("--scope".to_string());
 
     systemd_run_args.push("-p".to_string());
-    systemd_run_args.push("MemoryHigh=8G".to_string());
+    systemd_run_args.push(format!("MemoryHigh={}M", sys_mem_limit_mb));
 
     systemd_run_args.push("-p".to_string());
     systemd_run_args.push("MemorySwapMax=999G".to_string());
@@ -453,9 +455,9 @@ async fn vm_manager(mut path_to_config: String) {
   dump_error!( tokio::io::stdout().flush().await );
 
   let qapi_stream = dump_error_and_ret!( qapi::futures::QgaStreamTokio::open_uds(qmp_socket).await );
-  let (qga, handle) = qapi_stream.spawn_tokio();
+  let (qga, _handle) = qapi_stream.spawn_tokio();
 
-  let sync_value = &qga as *const _ as usize as i32;
+  let _sync_value = &qga as *const _ as usize as i32;
   //dump_error!( qga.guest_sync(sync_value).await ); // TODO re-investigate setting this up
 
 
