@@ -18,6 +18,9 @@ bios_override = ""
 
 # spice_gl_override = "off"
 
+smp_override = "8"
+
+
 # Appended to qemu command
 addtl_args = [
   "-device", "qemu-xhci",

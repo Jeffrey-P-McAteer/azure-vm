@@ -355,7 +355,7 @@ async fn vm_manager(mut path_to_config: String) {
     "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), "host".into(),
-    "-smp".into(), "2".into(),
+    "-smp".into(), vm_config.vm.smp_override.into(),
     "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
     "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),

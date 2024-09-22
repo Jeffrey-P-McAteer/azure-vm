@@ -39,6 +39,9 @@ pub struct VMBlock {
   #[serde(default = "default_spice_rendernode_override")]
   pub spice_rendernode_override: String,
 
+  #[serde(default = "default_smp_override")]
+  pub smp_override: String,
+
   pub ram_mb: usize,
 
   #[serde(default = "empty_vec_string")]
@@ -103,4 +106,8 @@ fn default_spice_gl_override() -> String {
 
 fn default_spice_rendernode_override() -> String {
   "/dev/dri/by-path/pci-0000:00:02.0-render".into()
+}
+
+fn default_smp_override() -> String {
+  "4".into()
 }
