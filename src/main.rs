@@ -207,6 +207,22 @@ async fn vm_manager(mut path_to_config: String) {
 
   ensure_virtio_win_iso_exists().await;
 
+  // Spawn any require sub-processes the VM wants
+  let mut preboot_children = vec![];
+  for preboot_cmd in vm_config.vm.preboot_cmds.iter() {
+    match  tokio::process::Command::new("sh")
+            .args(&["-c", preboot_cmd])
+            .kill_on_drop(true)
+            .spawn() {
+      Ok(preboot_child) => {
+        preboot_children.push(preboot_child);
+      }
+      Err(e) => {
+        eprintln!("{:?}", e);
+      }
+    }
+  }
+
   if ! vm_is_physical_disk {
     // Check for install
     let install_flag = vm_config.vm.flag_path(".installed");
@@ -600,6 +616,11 @@ async fn vm_manager(mut path_to_config: String) {
 
   // And kill child on exit
   dump_error!( qemu_proc.kill().await );
+
+  // Try to kill other children as well, murder is fun
+  for preboot_child in preboot_children.iter_mut() {
+    dump_error!( preboot_child.kill().await );
+  }
 
   do_shutdown().await;
 

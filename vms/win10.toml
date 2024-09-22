@@ -56,3 +56,11 @@ addtl_rdp_args = [
 ]
 
 
+# Every one of these is passed in-order to /bin/sh -c "VALUE"
+# For this particular VM, they handle the secure-boot and TPMv2 virtualization stuff win11 wants.
+preboot_cmds = [
+  "mkdir -p /tmp/tpm",
+  "cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/",
+  "swtpm socket --tpm2 --tpmstate dir=/tmp/tpm --ctrl type=unixio,path=/tmp/tpm/swtpm-sock",
+]
+
