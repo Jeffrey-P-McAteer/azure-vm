@@ -508,12 +508,13 @@ async fn vm_manager(mut path_to_config: String) {
         let mut rdp_args: Vec<String> = vec![];
 
         rdp_args.push("/cert:ignore".to_string());
-        //rdp_args.push("/w:1280".to_string());
-        //rdp_args.push("/h:800".to_string());
+
         rdp_args.push("/w:1920".to_string());
         rdp_args.push("/h:1080".to_string());
+
         rdp_args.push("/drive:DOWNLOADS,/j/downloads".to_string());
         rdp_args.push("/dynamic-resolution".to_string());
+
         if vm_config.vm.rdp_uname.len() > 0 {
           rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
         }
@@ -521,6 +522,14 @@ async fn vm_manager(mut path_to_config: String) {
           rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
         }
         rdp_args.push("/v:127.0.0.1".to_string());
+
+        // Audio config - we want to send the aduio over the RDP connection
+        rdp_args.push("/audio-mode:0".to_string());
+        rdp_args.push("/microphone:sys:alsa".to_string());
+
+        rdp_args.push("/auto-reconnect-max-retries:64".to_string());
+
+
 
         if let Some(cmd_exe) = line.split(" ").nth(1) {
           println!("cmd_exe = {:?}", cmd_exe);
