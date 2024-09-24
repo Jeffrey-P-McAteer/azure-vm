@@ -16,6 +16,7 @@ ram_mb = 18128
 # bios_override = "/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd"
 bios_override = ""
 
+# Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
 # spice_gl_override = "off"
 
 smp_override = "8"
