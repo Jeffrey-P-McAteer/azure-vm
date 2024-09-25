@@ -378,7 +378,8 @@ async fn vm_manager(mut path_to_config: String) {
     "-device".into(), "virtio-serial-pci".into(),
 
     "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
-      format!("unix=on,addr={},gl={},rendernode={},disable-ticketing=on", spice_socket.display(), vm_config.vm.spice_gl_override, vm_config.vm.spice_rendernode_override ),
+      format!("unix=on,addr={},gl={},disable-ticketing=on", spice_socket.display(), vm_config.vm.spice_gl_override),
+      //format!("unix=on,addr={},gl={},rendernode={},disable-ticketing=on", spice_socket.display(), vm_config.vm.spice_gl_override, vm_config.vm.spice_rendernode_override ),
 
     "-device".into(), "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0".into(),
     "-chardev".into(), "spicevmc,id=spicechannel0,name=vdagent".into(),

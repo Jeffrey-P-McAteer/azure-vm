@@ -31,8 +31,9 @@ addtl_args = [
 #    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
   "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
 
+
+#   "-display", "gtk",
 #  "-vga", "std",
-#  "-display", "gtk",
 
   # "-global", "ICH9-LPC.disable_s3=1",
 
@@ -64,6 +65,7 @@ addtl_rdp_args = [
 # Every one of these is passed in-order to /bin/sh -c "VALUE"
 # For this particular VM, they handle the secure-boot and TPMv2 virtualization stuff win11 wants.
 preboot_cmds = [
+  # "sudo modprobe qxl",
   "mkdir -p /tmp/tpm",
   "cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/",
   "swtpm socket --tpm2 --tpmstate dir=/tmp/tpm --ctrl type=unixio,path=/tmp/tpm/swtpm-sock",
