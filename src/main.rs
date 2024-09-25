@@ -238,10 +238,11 @@ async fn vm_manager(mut path_to_config: String) {
       let qemu_args: Vec<String> = vec![
         "-bios".into(), vm_config.vm.bios_override,
         "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
-        "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
+        "-enable-kvm".into(),
+        "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
         "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
         "-smp".into(), "2".into(),
-        "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
+        "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(), // "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
         // Possible CAC reader fwd ( lsusb -t )
         "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
@@ -352,7 +353,8 @@ async fn vm_manager(mut path_to_config: String) {
     "-bios".into(), (&vm_config.vm.bios_override).to_string(), // "-bios" MUST always be in this position, b/c we remove these if bios_override.len() < 1
 
     "-drive".into(), vm_root_drive_arg,
-    "-enable-kvm".into(), "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
+    "-enable-kvm".into(),
+    "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), "host".into(),
     "-smp".into(), vm_config.vm.smp_override.into(),

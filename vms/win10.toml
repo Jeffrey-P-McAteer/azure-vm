@@ -26,8 +26,6 @@ smp_override = "8"
 addtl_args = [
   "-device", "qemu-xhci",
 
-
-  "-machine", "q35",
   "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd",
 # Remember to run:
 #    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
@@ -57,6 +55,9 @@ addtl_rdp_args = [
   # Run 'sudo opensc-tool --list-readers' for names
   #"/smartcard:Alcor Micro AU9540 00 00",
   "/smartcard:Alcor Link AK9563 00 00",
+
+  "/rfx",
+
 ]
 
 
