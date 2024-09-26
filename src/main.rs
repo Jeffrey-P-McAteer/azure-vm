@@ -392,10 +392,16 @@ async fn vm_manager(mut path_to_config: String) {
 
   ];
 
-  if vm_config.vm.bios_override.len() < 1 {
-    qemu_args.drain(0..2); // Remove "-bios", "" b/c empty string sent in
-  }
+  { // Magic stuff
+    if vm_config.vm.bios_override.len() < 1 {
+      qemu_args.drain(0..2); // Remove "-bios", "" b/c empty string sent in
+    }
 
+    // If "-boot" appears in addtl_args, remove the LAST two arguments
+    if vm_config.vm.addtl_args.iter().any(|e| e == "-boot" ) {
+      qemu_args.drain(qemu_args.len()-2..qemu_args.len()); // Remove "-boot", "" b/c empty string sent in
+    }
+  }
 
   qemu_args.extend(vm_config.vm.addtl_args);
   let qemu_args = qemu_args;
