@@ -1,6 +1,6 @@
 
 [install]
-boot_iso = "/mnt/scratch/vms/Win10_22H2_English_x64v1.iso"
+boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 
 
 [vm]
@@ -15,7 +15,7 @@ ram_mb = 18128
 bios_override = ""
 
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
-#spice_gl_override = "off"
+spice_gl_override = "off"
 
 smp_override = "8"
 
@@ -25,6 +25,7 @@ addtl_args = [
 
 # Temporary install media
   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",
+   "-display", "gtk",
 
 
   "-device", "qemu-xhci",
@@ -34,18 +35,7 @@ addtl_args = [
 #    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
   "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
 
-
-#   "-display", "gtk",
-#  "-vga", "std",
-
-  # "-global", "ICH9-LPC.disable_s3=1",
-
-
-# Remember to run
-#   yay -S swtpm
-#   mkdir -p /tmp/tpm
-#   swtpm socket --tpm2 --tpmstate dir="/tmp/tpm" --ctrl type=unixio,path="/tmp/tpm/swtpm-sock"
-#       while true ; do swtpm socket --tpm2 --tpmstate dir="/tmp/tpm" --ctrl type=unixio,path="/tmp/tpm/swtpm-sock" ; done
+# These require inputs provided by preboot_cmds below
   "-chardev", "socket,id=chrtpm,path=/tmp/tpm/swtpm-sock",
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",

@@ -223,7 +223,8 @@ async fn vm_manager(mut path_to_config: String) {
     }
   }
 
-  if ! vm_is_physical_disk {
+  //if ! vm_is_physical_disk {
+  if vm_config.install.boot_iso.to_str().unwrap_or_default().len() > 1 {
     // Check for install
     let install_flag = vm_config.vm.flag_path(".installed");
     println!("install_flag = {:?}", install_flag);
