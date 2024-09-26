@@ -4,10 +4,8 @@ boot_iso = "/mnt/scratch/vms/Win10_22H2_English_x64v1.iso"
 
 
 [vm]
-name = "League-Win10"
+name = "Windows-SSK-SSD"
 mount_windows_virtio_iso = true
-# disk_image = "/mnt/scratch/vms/league-win10.qcow2"
-# disk_image_gb = 146
 disk_partuuid = "f26e2d08-0f10-11ee-b535-525400123456" # Looked up + the disk holding this partition is what's booted.
 ram_mb = 18128
 #ram_mb = 26256
@@ -17,7 +15,7 @@ ram_mb = 18128
 bios_override = ""
 
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
-# spice_gl_override = "off"
+#spice_gl_override = "off"
 
 smp_override = "8"
 
