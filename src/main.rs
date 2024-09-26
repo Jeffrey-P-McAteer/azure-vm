@@ -270,7 +270,7 @@ async fn vm_manager(mut path_to_config: String) {
         // Hmmm... likely want more config in future.
         "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
 
-        "-device".into(), "virtio-vga".into(), // gl=on,max_outputs=1 where do these get set ???
+        // "-device".into(), "virtio-vga".into(), // gl=on,max_outputs=1 where do these get set ???
         "-display".into(), "gtk".into(),
 
         // Attach boot ISO
@@ -295,6 +295,9 @@ async fn vm_manager(mut path_to_config: String) {
           qemu_args.drain(qemu_args.len()-2..qemu_args.len()); // Remove "-boot", "" b/c empty string sent in
         }
       }
+
+      qemu_args.extend(vm_config.vm.addtl_args);
+      let qemu_args = qemu_args;
 
       // If we request > 1/2 system RAM, limit to just the first 1/2 minus 1gb.
       let sys_mem_limit_mb = (sys_mem_mb/2) - 1024;
