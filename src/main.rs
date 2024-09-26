@@ -264,9 +264,6 @@ async fn vm_manager(mut path_to_config: String) {
         "-smp".into(), "2".into(),
         "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(), // "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
-        // Possible CAC reader fwd ( lsusb -t )
-        "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
-
         // Use pulse API to talk to pipewire
         "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
 
