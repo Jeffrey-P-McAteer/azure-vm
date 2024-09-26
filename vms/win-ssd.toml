@@ -6,7 +6,7 @@ boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 [vm]
 name = "Windows-SSK-SSD"
 mount_windows_virtio_iso = true
-disk_partuuid = "f26e2d08-0f10-11ee-b535-525400123456" # Looked up + the disk holding this partition is what's booted.
+disk_partuuid = "e37867c5-1e8a-41e6-8877-d337cb7ed435" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
 ram_mb = 18128
 #ram_mb = 26256
 
