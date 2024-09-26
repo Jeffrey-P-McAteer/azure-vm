@@ -255,8 +255,8 @@ async fn vm_manager(mut path_to_config: String) {
       println!("  touch {:?}", install_flag);
       println!("");
 
-      let qemu_args: Vec<String> = vec![
-        "-bios".into(), vm_config.vm.bios_override,
+      let mut qemu_args: Vec<String> = vec![
+        "-bios".into(), vm_config.vm.bios_override.to_string(),
         "-drive".into(), vm_root_drive_arg.to_string(),
         "-enable-kvm".into(),
         "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
@@ -287,6 +287,17 @@ async fn vm_manager(mut path_to_config: String) {
         //"-boot".into(), "menu=on,splash-time=18".into(),
 
       ];
+
+      { // Magic stuff
+        if vm_config.vm.bios_override.len() < 1 {
+          qemu_args.drain(0..2); // Remove "-bios", "" b/c empty string sent in
+        }
+
+        // If "-boot" appears in addtl_args, remove the LAST two arguments
+        if vm_config.vm.addtl_args.iter().any(|e| e == "-boot" ) {
+          qemu_args.drain(qemu_args.len()-2..qemu_args.len()); // Remove "-boot", "" b/c empty string sent in
+        }
+      }
 
       // If we request > 1/2 system RAM, limit to just the first 1/2 minus 1gb.
       let sys_mem_limit_mb = (sys_mem_mb/2) - 1024;
