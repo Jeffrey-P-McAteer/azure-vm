@@ -15,7 +15,7 @@ ram_mb = 18128
 bios_override = ""
 
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
-spice_gl_override = "off"
+# spice_gl_override = "off"
 
 smp_override = "8"
 
@@ -23,10 +23,12 @@ smp_override = "8"
 # Appended to qemu command
 addtl_args = [
 
+# This is necessary for some boot magic w/ modern EFI
+  "-machine", "q35",
+
 # Temporary install media
 #   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",
 #   "-display", "gtk",
-
 
   "-device", "qemu-xhci",
 

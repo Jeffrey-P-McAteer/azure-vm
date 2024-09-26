@@ -260,12 +260,14 @@ async fn vm_manager(mut path_to_config: String) {
         "-drive".into(), vm_root_drive_arg.to_string(),
         "-enable-kvm".into(),
         "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
-        "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+        //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
+        "-cpu".into(), "host".into(),
         "-smp".into(), "2".into(),
         "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(), // "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
         // Use pulse API to talk to pipewire
-        "-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+        //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
+        "-audiodev".into(), "id=alsa,driver=alsa".into(), // yay -S qemu-audio-alsa
 
         // Hmmm... likely want more config in future.
         "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10".into(),
@@ -274,10 +276,10 @@ async fn vm_manager(mut path_to_config: String) {
         "-display".into(), "gtk".into(),
 
         // Attach boot ISO
-        "-drive".into(), format!("file={},if=ide,index=1,media=cdrom", vm_config.install.boot_iso.display() ),
+        "-drive".into(), format!("file={},if=ide,index=1,media=cdrom,readonly=on", vm_config.install.boot_iso.display() ),
 
         // Attach drivers
-        "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
+        // "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
 
         "-boot".into(), "d".into(), // c == first hd, d == first cd-rom drive
 
