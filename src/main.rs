@@ -223,7 +223,26 @@ async fn vm_manager(mut path_to_config: String) {
     }
   }
 
-  //if ! vm_is_physical_disk {
+
+  let vm_root_drive_arg: String;
+  if vm_is_physical_disk {
+    // Lookup disk holding vm_config.vm.disk_partuuid, and check if it exists.
+    let dev_rel_link = PathBuf::from(format!("/dev/disk/by-partuuid/{}", &vm_config.vm.disk_partuuid));
+    let mut dev_reg_path = tokio::fs::canonicalize(dev_rel_link).await.expect("Cannot find disk_partuuid! is it connected?");
+    // trim last char in dev_reg_path assuming it's a partition, then see if it exists.
+    let dev_part_name = dev_reg_path.file_name().expect("No file name!");
+    let mut dev_part_name = dev_part_name.to_str().expect("Bad file name!").to_owned();
+    dev_part_name.pop(); // remove last character, eg "sda2" becomes "sda"
+
+    dev_reg_path.set_file_name(dev_part_name);
+
+    vm_root_drive_arg = format!("format=raw,file={}", dev_reg_path.display() );
+
+  }
+  else {
+    vm_root_drive_arg = format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
+  }
+
   if vm_config.install.boot_iso.to_str().unwrap_or_default().len() > 1 {
     // Check for install
     let install_flag = vm_config.vm.flag_path(".installed");
@@ -238,7 +257,7 @@ async fn vm_manager(mut path_to_config: String) {
 
       let qemu_args: Vec<String> = vec![
         "-bios".into(), vm_config.vm.bios_override,
-        "-drive".into(), format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() ),
+        "-drive".into(), vm_root_drive_arg.to_string(),
         "-enable-kvm".into(),
         "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
         "-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
@@ -329,25 +348,6 @@ async fn vm_manager(mut path_to_config: String) {
 
   if qmp_socket.exists() {
     dump_error!( tokio::fs::remove_file(&qmp_socket).await );
-  }
-
-  let vm_root_drive_arg: String;
-  if vm_is_physical_disk {
-    // Lookup disk holding vm_config.vm.disk_partuuid, and check if it exists.
-    let dev_rel_link = PathBuf::from(format!("/dev/disk/by-partuuid/{}", &vm_config.vm.disk_partuuid));
-    let mut dev_reg_path = tokio::fs::canonicalize(dev_rel_link).await.expect("Cannot find disk_partuuid! is it connected?");
-    // trim last char in dev_reg_path assuming it's a partition, then see if it exists.
-    let dev_part_name = dev_reg_path.file_name().expect("No file name!");
-    let mut dev_part_name = dev_part_name.to_str().expect("Bad file name!").to_owned();
-    dev_part_name.pop(); // remove last character, eg "sda2" becomes "sda"
-
-    dev_reg_path.set_file_name(dev_part_name);
-
-    vm_root_drive_arg = format!("format=raw,file={}", dev_reg_path.display() );
-
-  }
-  else {
-    vm_root_drive_arg = format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
   }
 
   let mut qemu_args: Vec<String> = vec![
