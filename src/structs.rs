@@ -63,7 +63,12 @@ pub struct VMBlock {
 impl VMBlock {
   pub fn flag_path(&self, flag: &str) -> PathBuf {
     if self.disk_partuuid.len() > 1 {
-      PathBuf::from(format!("/mnt/scratch/vms/_flag_{}.{}", &self.disk_partuuid, flag))
+      if flag.chars().next() == Some('.') { // If  a '.' is already specified, avoid creating 2 dots in file path
+        PathBuf::from(format!("/mnt/scratch/vms/_flag_{}{}", &self.disk_partuuid, flag))
+      }
+      else {
+        PathBuf::from(format!("/mnt/scratch/vms/_flag_{}.{}", &self.disk_partuuid, flag))
+      }
     }
     else {
       let mut flag_file_path = self.disk_image.clone();
