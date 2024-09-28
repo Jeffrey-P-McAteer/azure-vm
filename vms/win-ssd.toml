@@ -52,7 +52,7 @@ addtl_rdp_args = [
   #"/smartcard:Alcor Micro AU9540 00 00",
   "/smartcard:Alcor Link AK9563 00 00",
 
-  "/rfx",
+  # "/rfx",
 
 ]
 
