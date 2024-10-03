@@ -116,3 +116,19 @@ fn default_spice_rendernode_override() -> String {
 fn default_smp_override() -> String {
   "4".into()
 }
+
+impl VMConfig {
+  pub fn apply_env_overrides(&mut self) {
+    if let Ok(var_val) = std::env::var("spice_gl_override") {
+      if var_val.len() > 0 {
+        self.vm.spice_gl_override = var_val.into();
+      }
+    }
+    if let Ok(var_val) = std::env::var("smp_override") {
+      if var_val.len() > 0 {
+        self.vm.smp_override = var_val.into();
+      }
+    }
+
+  }
+}

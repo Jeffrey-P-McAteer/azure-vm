@@ -177,7 +177,11 @@ async fn vm_manager(mut path_to_config: String) {
 
   println!("Reading {}", &path_to_config);
   let vm_file_content = tokio::fs::read_to_string(path_to_config).await.expect("Could not read config file!");
-  let vm_config: VMConfig = toml::from_str(&vm_file_content).expect("Could not parse config!");
+  let mut vm_config: VMConfig = toml::from_str(&vm_file_content).expect("Could not parse config!");
+
+  vm_config.apply_env_overrides();
+
+  let vm_config = vm_config;
 
   println!("vm_config={:?}", vm_config);
 
