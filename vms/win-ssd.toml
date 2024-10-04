@@ -23,11 +23,11 @@ smp_override = "8"
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
 cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
 
+# q35 is necessary for modern EFI stuffs
+machine_override = "q35,accel=kvm,kernel_irqchip=on"
+
 # Appended to qemu command
 addtl_args = [
-
-# This is necessary for some boot magic w/ modern EFI
-  "-machine", "q35",
 
 # Temporary install media
 #   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",

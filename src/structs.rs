@@ -45,6 +45,9 @@ pub struct VMBlock {
   #[serde(default = "default_cpu_override")]
   pub cpu_override: String,
 
+  #[serde(default = "default_machine_override")]
+  pub machine_override: String,
+
   pub ram_mb: usize,
 
   #[serde(default = "empty_vec_string")]
@@ -122,6 +125,10 @@ fn default_smp_override() -> String {
 
 fn default_cpu_override() -> String {
   "host".into()
+}
+
+fn default_machine_override() -> String {
+  "type=pc,accel=kvm,kernel_irqchip=on".into()
 }
 
 impl VMConfig {

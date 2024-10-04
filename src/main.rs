@@ -267,7 +267,7 @@ async fn vm_manager(mut path_to_config: String) {
         //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
         "-cpu".into(), vm_config.vm.cpu_override.to_string(),
         "-smp".into(), "2".into(),
-        "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(), // "type=pc,accel=kvm,kernel_irqchip=on".into(),
+        "-machine".into(), vm_config.vm.machine_override.to_string(),
 
         // Use pulse API to talk to pipewire
         //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
@@ -376,7 +376,7 @@ async fn vm_manager(mut path_to_config: String) {
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), vm_config.vm.cpu_override.into(),
     "-smp".into(), vm_config.vm.smp_override.into(),
-    "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
+    "-machine".into(), vm_config.vm.machine_override.to_string(),
 
     "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),
 
