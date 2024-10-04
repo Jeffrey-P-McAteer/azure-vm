@@ -240,7 +240,7 @@ async fn vm_manager(mut path_to_config: String) {
 
     dev_reg_path.set_file_name(dev_part_name);
 
-    vm_root_drive_arg = format!("format=raw,file={}", dev_reg_path.display() );
+    vm_root_drive_arg = format!("format=raw,file={},if=virtio", dev_reg_path.display() );
 
   }
   else {
