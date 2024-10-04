@@ -42,6 +42,9 @@ pub struct VMBlock {
   #[serde(default = "default_smp_override")]
   pub smp_override: String,
 
+  #[serde(default = "default_cpu_override")]
+  pub cpu_override: String,
+
   pub ram_mb: usize,
 
   #[serde(default = "empty_vec_string")]
@@ -115,6 +118,10 @@ fn default_spice_rendernode_override() -> String {
 
 fn default_smp_override() -> String {
   "4".into()
+}
+
+fn default_cpu_override() -> String {
+  "host".into()
 }
 
 impl VMConfig {

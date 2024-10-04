@@ -265,7 +265,7 @@ async fn vm_manager(mut path_to_config: String) {
         "-enable-kvm".into(),
         "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
         //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
-        "-cpu".into(), "host".into(),
+        "-cpu".into(), vm_config.vm.cpu_override.to_string(),
         "-smp".into(), "2".into(),
         "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(), // "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
@@ -368,13 +368,13 @@ async fn vm_manager(mut path_to_config: String) {
   }
 
   let mut qemu_args: Vec<String> = vec![
-    "-bios".into(), (&vm_config.vm.bios_override).to_string(), // "-bios" MUST always be in this position, b/c we remove these if bios_override.len() < 1
+    "-bios".into(), (&vm_config.vm.bios_override).into(), // "-bios" MUST always be in this position, b/c we remove these if bios_override.len() < 1
 
     "-drive".into(), vm_root_drive_arg,
     "-enable-kvm".into(),
     "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
-    "-cpu".into(), "host".into(),
+    "-cpu".into(), vm_config.vm.cpu_override.into(),
     "-smp".into(), vm_config.vm.smp_override.into(),
     "-machine".into(), "type=pc,accel=kvm,kernel_irqchip=on".into(),
 
