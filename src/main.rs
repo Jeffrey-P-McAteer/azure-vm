@@ -157,7 +157,7 @@ static QEMU_PROC_PID: once_cell::sync::Lazy<std::sync::atomic::AtomicI32> = once
 
 async fn vm_manager(mut path_to_config: String) {
 
-  if ! std::path::Path::new(&path_to_config).exists() {
+  if ! ( std::path::Path::new(&path_to_config).exists() && std::path::Path::new(&path_to_config).is_file() ) {
     // Scan under /j/bins/azure-contain/containers for a file containing this & use that
     let mut containers_dir_o = dump_error_and_ret!( tokio::fs::read_dir("/j/bins/azure-vm/vms").await );
     while let Some(container_toml) = dump_error_and_ret!( containers_dir_o.next_entry().await ) {
