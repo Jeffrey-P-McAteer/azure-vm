@@ -15,6 +15,9 @@ ram_mb = 18128
 # bios_override = "/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd"
 bios_override = ""
 
+#root_disk_if_override = "virtio"
+root_disk_if_override = "none"
+
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
 # spice_gl_override = "off"
 
@@ -28,6 +31,13 @@ machine_override = "q35,accel=kvm,kernel_irqchip=on"
 
 # Appended to qemu command
 addtl_args = [
+
+ "-device", "ahci,id=ahci", # root_disk always points to our disk_partuuid-selected device's parent
+ "-device", "ide-hd,drive=root_disk,bus=ahci.0",
+
+  # "-device", "nec-usb-xhci,id=xhci", # these 2 lines are an act of desperation - and windows still fails to boot even when inserted as a USB drive
+  # "-device", "usb-storage,bus=xhci.0,drive=root_disk",
+
 
 # Temporary install media
 #   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",

@@ -48,6 +48,9 @@ pub struct VMBlock {
   #[serde(default = "default_machine_override")]
   pub machine_override: String,
 
+  #[serde(default = "default_root_disk_if_override")]
+  pub root_disk_if_override: String, // Typically "none" or "virtio"
+
   pub ram_mb: usize,
 
   #[serde(default = "empty_vec_string")]
@@ -129,6 +132,10 @@ fn default_cpu_override() -> String {
 
 fn default_machine_override() -> String {
   "type=pc,accel=kvm,kernel_irqchip=on".into()
+}
+
+fn default_root_disk_if_override() -> String {
+  "none".into()
 }
 
 impl VMConfig {
