@@ -408,7 +408,7 @@ async fn vm_manager(mut path_to_config: String) {
 
     // "-vga".into(), "virtio".into(), // alternatively; -vga std?
 
-    "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
+    // "-drive".into(), format!("file={},if=ide,index=2,media=cdrom", VIRTIO_WIN_ISO_LOCAL_PATH ),
 
     "-boot".into(), "c".into(), // c == first hd, d == first cd-rom drive
 
