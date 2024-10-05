@@ -27,8 +27,8 @@ root_disk_if_override = ""
 smp_override = "1"
 
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
-#cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
-cpu_override = "host"
+cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
+#cpu_override = "host"
 
 # q35 is necessary for modern EFI stuffs
 #machine_override = "q35,accel=kvm,kernel_irqchip=on"
@@ -89,5 +89,9 @@ preboot_cmds = [
   "mkdir -p /tmp/tpm",
   "cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/",
   "swtpm socket --tpm2 --tpmstate dir=/tmp/tpm --ctrl type=unixio,path=/tmp/tpm/swtpm-sock",
+
+  # hfile holds a flag file open that bumps the CPU to whatever it supports
+  # "hfile /tmp/force-cpu-performance",
+
 ]
 
