@@ -240,11 +240,12 @@ async fn vm_manager(mut path_to_config: String) {
 
     dev_reg_path.set_file_name(dev_part_name);
 
-    vm_root_drive_arg = format!("format=raw,file={},if=virtio", dev_reg_path.display() );
+    // vm_root_drive_arg = format!("format=raw,file={},if=virtio", dev_reg_path.display() );
+    vm_root_drive_arg = format!("id=root_disk,format=raw,file={},if=none", dev_reg_path.display() );
 
   }
   else {
-    vm_root_drive_arg = format!("format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
+    vm_root_drive_arg = format!("id=root_disk,format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
   }
 
   if vm_config.install.boot_iso.to_str().unwrap_or_default().len() > 1 {
@@ -370,7 +371,10 @@ async fn vm_manager(mut path_to_config: String) {
   let mut qemu_args: Vec<String> = vec![
     "-bios".into(), (&vm_config.vm.bios_override).into(), // "-bios" MUST always be in this position, b/c we remove these if bios_override.len() < 1
 
-    "-drive".into(), vm_root_drive_arg,
+    "-drive".into(), vm_root_drive_arg,      // No matter qcow2 or raw disk, id=root_disk
+    "-device".into(), "ahci,id=ahci".into(), // required for AHCI disk emulation, the way windorks wants it -_-
+    "-device".into(), "ide-hd,drive=root_disk,bus=ahci.0".into(),
+
     "-enable-kvm".into(),
     "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
