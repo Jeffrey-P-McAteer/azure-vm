@@ -402,13 +402,12 @@ async fn vm_manager(mut path_to_config: String) {
     "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp::3389-:3389,hostfwd=udp::3389-:3389".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
-    // "-device".into(), "virtio-gpu-pci".into(),
-    "-device".into(), "virtio-serial-pci".into(),
 
     "-spice".into(), // /dev/dri/by-path/pci-0000:00:02.0-render is the intel GPU
       format!("unix=on,addr={},gl={},disable-ticketing=on", spice_socket.display(), vm_config.vm.spice_gl_override),
       //format!("unix=on,addr={},gl={},rendernode={},disable-ticketing=on", spice_socket.display(), vm_config.vm.spice_gl_override, vm_config.vm.spice_rendernode_override ),
 
+    "-device".into(), "virtio-serial-pci".into(),
     "-device".into(), "virtserialport,chardev=spicechannel0,name=com.redhat.spice.0".into(),
     "-chardev".into(), "spicevmc,id=spicechannel0,name=vdagent".into(),
 

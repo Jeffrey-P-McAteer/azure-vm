@@ -2,6 +2,8 @@
 [install]
 boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 
+# NOTE: works "fine":
+#  qemu-system-x86_64 -drive id=root_disk,format=raw,file=/dev/sdd -enable-kvm -m 18128M -cpu host -machine q35,accel=kvm -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd -drive if=pflash,format=raw,file=/tmp/OVMF_VARS.fd -boot c -display gtk -device qemu-xhci -device usb-kbd -device usb-tablet
 
 [vm]
 name = "Windows-SSK-SSD"
@@ -25,10 +27,12 @@ root_disk_if_override = ""
 smp_override = "8"
 
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
-cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
+#cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
+cpu_override = "host"
 
 # q35 is necessary for modern EFI stuffs
-machine_override = "q35,accel=kvm,kernel_irqchip=on"
+#machine_override = "q35,accel=kvm,kernel_irqchip=on"
+machine_override = "q35,accel=kvm"
 
 # Appended to qemu command
 addtl_args = [
@@ -48,14 +52,16 @@ addtl_args = [
 #   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",
 #   "-display", "gtk",
 
+  # USB keyboard & mouse grab-bag of hardware
   "-device", "qemu-xhci", "-device", "usb-kbd", "-device", "usb-tablet",
 
+  # Windows 11 Secure-Boot firmware
   "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd",
 # Remember to run:
 #    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
   "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
 
-# These require inputs provided by preboot_cmds below
+# These require inputs provided by preboot_cmds below; this does the windows 11-required TPM hardware config
   "-chardev", "socket,id=chrtpm,path=/tmp/tpm/swtpm-sock",
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",
