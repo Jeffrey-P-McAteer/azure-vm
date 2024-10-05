@@ -16,7 +16,8 @@ ram_mb = 18128
 bios_override = ""
 
 #root_disk_if_override = "virtio"
-root_disk_if_override = "none"
+#root_disk_if_override = "none,discard=unmap,aio=native,cache=none"
+root_disk_if_override = ""
 
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
 # spice_gl_override = "off"
@@ -32,18 +33,22 @@ machine_override = "q35,accel=kvm,kernel_irqchip=on"
 # Appended to qemu command
 addtl_args = [
 
- "-device", "ahci,id=ahci", # root_disk always points to our disk_partuuid-selected device's parent
- "-device", "ide-hd,drive=root_disk,bus=ahci.0",
+#  "-device", "virtio-scsi-pci,id=scsi0",
+#  "-device", "scsi-hd,drive=root_disk,bus=scsi0.0",
+  "-boot", "c",
 
-  # "-device", "nec-usb-xhci,id=xhci", # these 2 lines are an act of desperation - and windows still fails to boot even when inserted as a USB drive
-  # "-device", "usb-storage,bus=xhci.0,drive=root_disk",
+#  "-device", "ahci,id=ahci", # root_disk always points to our disk_partuuid-selected device's parent
+#  "-device", "ide-hd,drive=root_disk,bus=ahci.0",
+
+#  "-device", "nec-usb-xhci,id=xhci", # these 2 lines are an act of desperation - and windows still fails to boot even when inserted as a USB drive
+#  "-device", "usb-storage,bus=xhci.0,drive=root_disk",
 
 
-# Temporary install media
+# Temporary install/recovery media
 #   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",
 #   "-display", "gtk",
 
-  "-device", "qemu-xhci",
+  "-device", "qemu-xhci", "-device", "usb-kbd", "-device", "usb-tablet",
 
   "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd",
 # Remember to run:
@@ -74,6 +79,7 @@ addtl_rdp_args = [
 # For this particular VM, they handle the secure-boot and TPMv2 virtualization stuff win11 wants.
 preboot_cmds = [
   # "sudo modprobe qxl",
+  "echo 1 | sudo tee /sys/module/kvm/parameters/ignore_msrs", # vastly improves reliability of windows boot!
   "mkdir -p /tmp/tpm",
   "cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/",
   "swtpm socket --tpm2 --tpmstate dir=/tmp/tpm --ctrl type=unixio,path=/tmp/tpm/swtpm-sock",

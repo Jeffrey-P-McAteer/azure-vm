@@ -241,7 +241,15 @@ async fn vm_manager(mut path_to_config: String) {
     dev_reg_path.set_file_name(dev_part_name);
 
     // vm_root_drive_arg = format!("format=raw,file={},if=virtio", dev_reg_path.display() );
-    vm_root_drive_arg = format!("id=root_disk,format=raw,file={},if={}", dev_reg_path.display(), vm_config.vm.root_disk_if_override );
+
+    // Edge case handling
+    if vm_config.vm.root_disk_if_override.len() < 1 {
+      vm_root_drive_arg = format!("id=root_disk,format=raw,file={}", dev_reg_path.display() );
+    }
+    else {
+      // Common case
+      vm_root_drive_arg = format!("id=root_disk,format=raw,file={},if={}", dev_reg_path.display(), vm_config.vm.root_disk_if_override );
+    }
 
   }
   else {
