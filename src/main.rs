@@ -441,10 +441,31 @@ async fn vm_manager(mut path_to_config: String) {
     println!(">>> qemu-system-x86_64 {}", debug_qemu_args);
     println!(">>>");
 
-    tokio::process::Command::new("qemu-system-x86_64")
-          .args(&qemu_args)
-          .spawn()
-          .expect("Could not spawn child proc")
+    if vm_config.vm.drop_to_serial {
+      // Run interactively & return an "empty" process
+      let r = tokio::process::Command::new("qemu-system-x86_64")
+            .args(&qemu_args)
+            .stdin(std::process::Stdio::inherit())
+            .stdout(std::process::Stdio::inherit())
+            .stderr(std::process::Stdio::inherit())
+            .spawn()
+            .expect("Could not spawn child proc")
+            .wait().await;
+      if let Err(e) = r {
+        eprintln!("{:?}", e);
+      }
+
+      tokio::process::Command::new("echo")
+            .args(&["Done"])
+            .spawn()
+            .expect("Could not spawn child proc")
+    }
+    else {
+      tokio::process::Command::new("qemu-system-x86_64")
+            .args(&qemu_args)
+            .spawn()
+            .expect("Could not spawn child proc")
+    }
   }
   else {
     // Throw inside systemd-run and limit real ram to sys_mem_limit_mb
@@ -616,16 +637,16 @@ async fn vm_manager(mut path_to_config: String) {
       }
       else if line == "help" || line == "h" {
         println!(r#"Commands:
-  - gui
-      Opens SPICE client
-  - rdp
-      Opens RDP client to 127.0.0.1:3389
-  - help
-      Show this help
-  - exit / quit
-      Kill VM and exit
-  - *
-      Run as command in VM, returning output.
+- gui
+    Opens SPICE client
+- rdp
+    Opens RDP client to 127.0.0.1:3389
+- help
+    Show this help
+- exit / quit
+    Kill VM and exit
+- *
+    Run as command in VM, returning output.
 "#);
       }
       else if line == "quit" || line == "exit" {

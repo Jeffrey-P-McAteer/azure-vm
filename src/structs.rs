@@ -31,6 +31,9 @@ pub struct VMBlock {
   #[serde(default = "false_bool")]
   pub mount_windows_virtio_iso: bool,
 
+  #[serde(default = "false_bool")]
+  pub drop_to_serial: bool,
+
 
   #[serde(default = "default_bios_override_val")]
   pub bios_override: String,
@@ -150,6 +153,12 @@ impl VMConfig {
         self.vm.smp_override = var_val.into();
       }
     }
+    if let Ok(var_val) = std::env::var("drop_to_serial") {
+      if var_val.len() > 0 {
+        self.vm.drop_to_serial = var_val.contains('t') || var_val.contains('T') || var_val.contains('1');
+      }
+    }
+
 
   }
 }

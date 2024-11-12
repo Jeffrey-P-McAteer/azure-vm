@@ -66,6 +66,9 @@ addtl_args = [
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",
 
+# Serial access
+  "-nographic", "-serial", "mon:stdio", # "-append", "'console=ttyS0'"
+
 ]
 
 rdp_uname = "jeffrey"
