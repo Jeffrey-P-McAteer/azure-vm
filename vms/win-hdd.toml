@@ -26,7 +26,7 @@ smp_override = "6,sockets=1,cores=6"
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
 #cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
 #cpu_override = "host"
-cpu_override = "Broadwell-v4"
+cpu_override = "Broadwell-v4,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
 
 # q35 is necessary for modern EFI stuffs
 #machine_override = "q35,accel=kvm,kernel_irqchip=on"
