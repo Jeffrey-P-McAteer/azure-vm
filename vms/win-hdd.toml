@@ -19,12 +19,14 @@ root_disk_if_override = ""
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
 spice_gl_override = "off"
 
-#smp_override = "4,sockets=1,cores=4"
-smp_override = "1"
+smp_override = "6,sockets=1,cores=6"
+#smp_override = "1"
+#smp_override = "" # Empty string now omits "-smp" controls entirely
 
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
 #cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
-cpu_override = "host"
+#cpu_override = "host"
+cpu_override = "Broadwell-v4"
 
 # q35 is necessary for modern EFI stuffs
 #machine_override = "q35,accel=kvm,kernel_irqchip=on"

@@ -385,7 +385,14 @@ async fn vm_manager(mut path_to_config: String) {
     "-m".into(), format!("{}M", vm_config.vm.ram_mb ),
     //"-cpu".into(), "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time".into(),
     "-cpu".into(), vm_config.vm.cpu_override.into(),
-    "-smp".into(), vm_config.vm.smp_override.into(),
+  ];
+  if vm_config.vm.smp_override.len() > 0 {
+    qemu_args.append(&mut vec![
+      "-smp".into(),
+      vm_config.vm.smp_override.into(),
+    ]);
+  }
+  qemu_args.append(&mut vec![
     "-machine".into(), vm_config.vm.machine_override.to_string(),
 
     "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),
@@ -417,7 +424,7 @@ async fn vm_manager(mut path_to_config: String) {
 
     "-boot".into(), "c".into(), // c == first hd, d == first cd-rom drive
 
-  ];
+  ]);
 
   { // Magic stuff
     if vm_config.vm.bios_override.len() < 1 {
