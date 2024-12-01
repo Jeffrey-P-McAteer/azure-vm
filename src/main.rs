@@ -680,11 +680,32 @@ async fn vm_manager(mut path_to_config: String) {
 
   println!("Killing qemu...");
 
-  // And kill child on exit
+  if let Some(qemu_pid) = qemu_proc.id() {
+    for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
+      dump_error!(
+        nix::sys::signal::kill(
+          nix::unistd::Pid::from_raw( qemu_pid as i32 ), *signal
+        )
+      );
+      tokio::time::sleep( tokio::time::Duration::from_millis(50) ).await;
+    }
+    tokio::time::sleep( tokio::time::Duration::from_millis(150) ).await;
+  }
   dump_error!( qemu_proc.kill().await );
 
   // Try to kill other children as well, murder is fun
   for preboot_child in preboot_children.iter_mut() {
+    if let Some(child_pid) = preboot_child.id() {
+      for signal in &[nix::sys::signal::Signal::SIGCONT, nix::sys::signal::Signal::SIGINT, nix::sys::signal::Signal::SIGTERM] {
+        dump_error!(
+          nix::sys::signal::kill(
+            nix::unistd::Pid::from_raw( child_pid as i32 ), *signal
+          )
+        );
+        tokio::time::sleep( tokio::time::Duration::from_millis(50) ).await;
+      }
+      tokio::time::sleep( tokio::time::Duration::from_millis(150) ).await;
+    }
     dump_error!( preboot_child.kill().await );
   }
 
