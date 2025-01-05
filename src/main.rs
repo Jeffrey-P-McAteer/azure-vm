@@ -236,7 +236,11 @@ async fn vm_manager(mut path_to_config: String) {
     // trim last char in dev_reg_path assuming it's a partition, then see if it exists.
     let dev_part_name = dev_reg_path.file_name().expect("No file name!");
     let mut dev_part_name = dev_part_name.to_str().expect("Bad file name!").to_owned();
+
     dev_part_name.pop(); // remove last character, eg "sda2" becomes "sda"
+    if dev_part_name.contains("nvme") {
+      dev_part_name.pop(); // remove the next char, so "nvme0n1p3" becomes "nvme0n1"
+    }
 
     dev_reg_path.set_file_name(dev_part_name);
 

@@ -2,14 +2,10 @@
 [install]
 boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 
-# NOTE: works "fine":
-#  qemu-system-x86_64 -drive id=root_disk,format=raw,file=/dev/sdd -enable-kvm -m 18128M -cpu host -machine q35,accel=kvm -drive if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd -drive if=pflash,format=raw,file=/tmp/OVMF_VARS.fd -boot c -display gtk -device qemu-xhci -device usb-kbd -device usb-tablet
-
 [vm]
-name = "Windows-SSK-SSD"
+name = "Windows-WD-HDD"
 mount_windows_virtio_iso = true
-#disk_partuuid = "e37867c5-1e8a-41e6-8877-d337cb7ed435" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
-disk_partuuid = "42819004-f95d-4a07-8064-7a34ea3cda37"
+disk_partuuid = "a061de90-d70a-4a16-a955-708d6c6c4627" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
 ram_mb = 18128
 #ram_mb = 26256
 
@@ -17,18 +13,20 @@ ram_mb = 18128
 # bios_override = "/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd"
 bios_override = ""
 
-#root_disk_if_override = "virtio"
-#root_disk_if_override = "none,discard=unmap,aio=native,cache=none"
+#root_disk_if_override = "virtio" # Results in "Inaccessible boot device"
 root_disk_if_override = ""
 
 # Needs to be "off" if we're using GTK GUI w/ "-disply gtk"
-# spice_gl_override = "off"
-#smp_override = "8,sockets=1,cores=8"
-smp_override = "1"
+spice_gl_override = "off"
+
+smp_override = "6,sockets=1,cores=6"
+#smp_override = "1"
+#smp_override = "" # Empty string now omits "-smp" controls entirely
 
 # The "-cpu" addtl arguments enable hyper-v enlightenments, fast primitives that windows understands much like KVM!
-cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
+#cpu_override = "host,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
 #cpu_override = "host"
+cpu_override = "Broadwell-v4,hv_vapic,hv_relaxed,hv_vpindex,hv_time,hv_synic,hv_stimer,hv_tlbflush,hv_ipi,hv_frequencies,hv_avic,hv_xmm_input,hv_tlbflush_ext"
 
 # q35 is necessary for modern EFI stuffs
 #machine_override = "q35,accel=kvm,kernel_irqchip=on"
@@ -37,37 +35,21 @@ machine_override = "q35,accel=kvm"
 # Appended to qemu command
 addtl_args = [
 
-#  "-device", "virtio-scsi-pci,id=scsi0",
-#  "-device", "scsi-hd,drive=root_disk,bus=scsi0.0",
   "-boot", "c",
-
-#  "-device", "ahci,id=ahci", # root_disk always points to our disk_partuuid-selected device's parent
-#  "-device", "ide-hd,drive=root_disk,bus=ahci.0",
-
-#  "-device", "nec-usb-xhci,id=xhci", # these 2 lines are an act of desperation - and windows still fails to boot even when inserted as a USB drive
-#  "-device", "usb-storage,bus=xhci.0,drive=root_disk",
-
-
-# Temporary install/recovery media
-#   "-boot", "d", "-drive", "file=/mnt/scratch/vms/Win11_23H2_English_x64v2.iso,media=cdrom,readonly=on",
-#   "-display", "gtk",
 
   # USB keyboard & mouse grab-bag of hardware
   "-device", "qemu-xhci", "-device", "usb-kbd", "-device", "usb-tablet",
 
   # Windows 11 Secure-Boot firmware
-  "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.secboot.fd",
+  "-drive", "if=pflash,format=raw,readonly=on,file=/usr/share/edk2/x64/OVMF_CODE.secboot.4m.fd",
 # Remember to run:
-#    cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/
-  "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.fd",
+#    cp /usr/share/edk2/x64/OVMF_VARS.4m.fd /tmp/
+  "-drive", "if=pflash,format=raw,file=/tmp/OVMF_VARS.4m.fd",
 
 # These require inputs provided by preboot_cmds below; this does the windows 11-required TPM hardware config
   "-chardev", "socket,id=chrtpm,path=/tmp/tpm/swtpm-sock",
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",
-
-# Serial access
-  "-nographic", "-serial", "mon:stdio", # "-append", "'console=ttyS0'"
 
 ]
 
@@ -90,11 +72,14 @@ preboot_cmds = [
   # "sudo modprobe qxl",
   "echo 1 | sudo tee /sys/module/kvm/parameters/ignore_msrs", # vastly improves reliability of windows boot!
   "mkdir -p /tmp/tpm",
-  "cp /usr/share/edk2-ovmf/x64/OVMF_VARS.fd /tmp/",
+  "cp /usr/share/edk2/x64/OVMF_VARS.4m.fd /tmp/",
   "swtpm socket --tpm2 --tpmstate dir=/tmp/tpm --ctrl type=unixio,path=/tmp/tpm/swtpm-sock",
 
   # hfile holds a flag file open that bumps the CPU to whatever it supports
   # "hfile /tmp/force-cpu-performance",
+
+  # Power on jeff's second monitor; "hold" hangs around until killed, and so elegantly lets us power the monitor on while the VM is running and go back when it exits
+  "toggle-aoc hold silent",
 
 ]
 
