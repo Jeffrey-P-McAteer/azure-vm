@@ -51,6 +51,8 @@ addtl_args = [
   "-tpmdev", "emulator,id=tpm0,chardev=chrtpm",
   "-device", "tpm-tis,tpmdev=tpm0",
 
+# sudo pacman -S qemu-hw-usb-host
+
 ]
 
 rdp_uname = "jeffrey"
@@ -82,4 +84,5 @@ preboot_cmds = [
   "toggle-aoc hold silent",
 
 ]
+
 
