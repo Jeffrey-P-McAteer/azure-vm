@@ -59,12 +59,18 @@ async fn ensure_virtio_win_iso_exists() {
   if ! virtio_iso_path.exists() {
     // Download it
     println!("Downloading {} to {}", VIRTIO_WIN_ISO_URL, VIRTIO_WIN_ISO_LOCAL_PATH);
-    let mut local_virtio_iso_file = tokio::fs::File::create(VIRTIO_WIN_ISO_LOCAL_PATH).await.expect("Could not create file!");
-    let conn = reqwest::get(VIRTIO_WIN_ISO_URL).await.expect("Could not connect!");
-    let mut download_stream = conn.bytes_stream();
+    match tokio::fs::File::create(VIRTIO_WIN_ISO_LOCAL_PATH).await {
+      Ok(mut local_virtio_iso_file) => {
+        let conn = reqwest::get(VIRTIO_WIN_ISO_URL).await.expect("Could not connect!");
+        let mut download_stream = conn.bytes_stream();
 
-    while let Some(item) = download_stream.next().await {
-      dump_error!( tokio::io::copy(&mut item.unwrap().as_ref(), &mut local_virtio_iso_file).await );
+        while let Some(item) = download_stream.next().await {
+          dump_error!( tokio::io::copy(&mut item.unwrap().as_ref(), &mut local_virtio_iso_file).await );
+        }
+      }
+      Err(e) => {
+        eprintln!("Warning, the following resource will not be available: {} because {:?}", VIRTIO_WIN_ISO_LOCAL_PATH, e);
+      }
     }
 
   }
