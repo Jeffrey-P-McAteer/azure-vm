@@ -237,7 +237,12 @@ async fn vm_manager(mut path_to_config: String) {
   let vm_root_drive_arg: String;
   if vm_is_physical_disk {
     // Lookup disk holding vm_config.vm.disk_partuuid, and check if it exists.
-    let dev_rel_link = PathBuf::from(format!("/dev/disk/by-partuuid/{}", &vm_config.vm.disk_partuuid));
+    let dev_rel_link = if PathBuf::from(&vm_config.vm.disk_partuuid).exists() {
+      PathBuf::from(&vm_config.vm.disk_partuuid)
+    }
+    else {
+      PathBuf::from(format!("/dev/disk/by-partuuid/{}", &vm_config.vm.disk_partuuid))
+    };
     let mut dev_reg_path = tokio::fs::canonicalize(dev_rel_link).await.expect("Cannot find disk_partuuid! is it connected?");
     // trim last char in dev_reg_path assuming it's a partition, then see if it exists.
     let dev_part_name = dev_reg_path.file_name().expect("No file name!");

@@ -5,7 +5,8 @@ boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 [vm]
 name = "Windows-WD-HDD"
 mount_windows_virtio_iso = true
-disk_partuuid = "a061de90-d70a-4a16-a955-708d6c6c4627" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
+#disk_partuuid = "a061de90-d70a-4a16-a955-708d6c6c4627" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
+disk_partuuid = "/dev/sdb"
 ram_mb = 18128
 #ram_mb = 26256
 
@@ -53,6 +54,8 @@ addtl_args = [
 
 # sudo pacman -S qemu-hw-usb-host
 
+#  "-drive", "file=/j/downloads/Win11_24H2_English_x64.iso,index=1,media=cdrom",
+#  "-boot", "menu=on",
 ]
 
 rdp_uname = "jeffrey"
