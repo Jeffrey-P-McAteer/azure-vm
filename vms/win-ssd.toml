@@ -6,7 +6,7 @@ boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 name = "Windows-WD-HDD"
 mount_windows_virtio_iso = true
 #disk_partuuid = "a061de90-d70a-4a16-a955-708d6c6c4627" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
-disk_partuuid = "/dev/sdb"
+disk_partuuid = "/dev/disk/by-id/wwn-0x50014ee6051db955"
 ram_mb = 18128
 #ram_mb = 26256
 

@@ -253,7 +253,11 @@ async fn vm_manager(mut path_to_config: String) {
       dev_part_name.pop(); // remove the next char, so "nvme0n1p3" becomes "nvme0n1"
     }
 
-    dev_reg_path.set_file_name(dev_part_name);
+    // Only if ^^ dumb trunctions actually found a partition; this allows us to walk up a tree if vague identifier is passed
+    // while still using explocit paths if given
+    if dev_reg_path.parent().unwrap_or(&PathBuf::from("/")).join(&dev_part_name).exists() {
+      dev_reg_path.set_file_name(&dev_part_name);
+    }
 
     // vm_root_drive_arg = format!("format=raw,file={},if=virtio", dev_reg_path.display() );
 

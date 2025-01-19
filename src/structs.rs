@@ -77,24 +77,24 @@ impl VMBlock {
     if self.disk_partuuid.len() > 1 {
       if PathBuf::from("/mnt/scratch/vms").exists() {
         if flag.chars().next() == Some('.') { // If  a '.' is already specified, avoid creating 2 dots in file path
-          PathBuf::from(format!("/mnt/scratch/vms/_flag_{}{}", &self.disk_partuuid, flag))
+          PathBuf::from(format!("/mnt/scratch/vms/_flag_{}{}", &self.disk_partuuid.replace("/", "-"), flag))
         }
         else {
-          PathBuf::from(format!("/mnt/scratch/vms/_flag_{}.{}", &self.disk_partuuid, flag))
+          PathBuf::from(format!("/mnt/scratch/vms/_flag_{}.{}", &self.disk_partuuid.replace("/", "-"), flag))
         }
       }
       else {
         if flag.chars().next() == Some('.') { // If  a '.' is already specified, avoid creating 2 dots in file path
-          PathBuf::from(format!("/tmp/vms/_flag_{}{}", &self.disk_partuuid, flag))
+          PathBuf::from(format!("/tmp/vms/_flag_{}{}", &self.disk_partuuid.replace("/", "-"), flag))
         }
         else {
-          PathBuf::from(format!("/tmp/vms/_flag_{}.{}", &self.disk_partuuid, flag))
+          PathBuf::from(format!("/tmp/vms/_flag_{}.{}", &self.disk_partuuid.replace("/", "-"), flag))
         }
       }
     }
     else {
       let mut flag_file_path = self.disk_image.clone();
-      let mut file_name = flag_file_path.file_name().unwrap_or(std::ffi::OsStr::new(&self.name)).to_owned();
+      let mut file_name = flag_file_path.file_name().unwrap_or(std::ffi::OsStr::new(&self.name.replace("/", "-"))).to_owned();
       file_name.push( &std::ffi::OsStr::new(flag) );
       flag_file_path.set_file_name(file_name);
       flag_file_path
