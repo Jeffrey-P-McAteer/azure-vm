@@ -263,16 +263,19 @@ async fn vm_manager(mut path_to_config: String) {
 
     // Edge case handling
     if vm_config.vm.root_disk_if_override.len() < 1 {
-      vm_root_drive_arg = format!("id=root_disk,format=raw,file={}", dev_reg_path.display() );
+      //vm_root_drive_arg = format!("id=root_disk,format=raw,cache=none,file={}", dev_reg_path.display() );
+      vm_root_drive_arg = format!("id=root_disk,format=raw,cache=unsafe,file={}", dev_reg_path.display() );
     }
     else {
       // Common case
-      vm_root_drive_arg = format!("id=root_disk,format=raw,file={},if={}", dev_reg_path.display(), vm_config.vm.root_disk_if_override );
+      //vm_root_drive_arg = format!("id=root_disk,format=raw,cache=none,file={},if={}", dev_reg_path.display(), vm_config.vm.root_disk_if_override );
+      vm_root_drive_arg = format!("id=root_disk,format=raw,cache=unsafe,file={},if={}", dev_reg_path.display(), vm_config.vm.root_disk_if_override );
     }
 
   }
   else {
-    vm_root_drive_arg = format!("id=root_disk,format=qcow2,file={}", vm_config.vm.disk_image.to_string_lossy() );
+    //vm_root_drive_arg = format!("id=root_disk,format=qcow2,cache=none,file={}", vm_config.vm.disk_image.to_string_lossy() );
+    vm_root_drive_arg = format!("id=root_disk,format=qcow2,cache=unsafe,file={}", vm_config.vm.disk_image.to_string_lossy() );
   }
 
   if vm_config.install.boot_iso.to_str().unwrap_or_default().len() > 1 {
@@ -703,6 +706,14 @@ async fn vm_manager(mut path_to_config: String) {
   println!("");
   dump_error!( std::io::stdout().flush() );
   dump_error!( tokio::io::stdout().flush().await );
+
+  println!("Syncing disks...");
+
+  dump_error!(
+    tokio::process::Command::new("sync")
+      .status()
+      .await
+  );
 
   println!("Killing qemu...");
 
