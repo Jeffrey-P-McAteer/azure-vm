@@ -419,16 +419,13 @@ async fn vm_manager(mut path_to_config: String) {
 
     "-qmp".into(), format!("unix:{},server=on,wait=off", qmp_socket.display() ),
 
-    // Possible CAC reader fwd ( lsusb -t )
-    // "-usb".into(), "-device".into(), "usb-host,hostbus=1,hostport=2".into(),
-
     // Use pulse API to talk to pipewire
     //"-audiodev".into(), "id=pa,driver=pa,server=/run/user/1000/pulse/native".into(),
     "-audiodev".into(), "id=alsa,driver=alsa".into(), // yay -S qemu-audio-alsa
     "-device".into(), "intel-hda".into(), "-device".into(), "hda-output,audiodev=alsa".into(), // frontend HW presented to VM
 
     // Hmmm... likely want more config in future.
-    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp::3389-:3389,hostfwd=udp::3389-:3389".into(),
+    "-nic".into(), "user,id=winnet0,id=mynet0,net=192.168.90.0/24,dhcpstart=192.168.90.10,hostfwd=tcp:127.0.0.1:3389-:3389,hostfwd=udp:127.0.0.1:3389-:3389,hostfwd=tcp:127.0.0.1:2222-:22".into(),
 
     // Assume guest drivers are installed during install phase, use spice UI
 

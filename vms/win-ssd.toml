@@ -1,4 +1,7 @@
 
+# Note: This machine is configured so we can jump into a terminal with
+#   badssh -i /j/ident/github_id -p 2222 Jeffrey@127.0.0.1
+
 [install]
 boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 
@@ -56,6 +59,16 @@ addtl_args = [
 
 #  "-drive", "file=/j/downloads/Win11_24H2_English_x64.iso,index=1,media=cdrom",
 #  "-boot", "menu=on",
+
+# This allows us to connect to the serial console over TCP!
+#    nc -v localhost 4321
+#  "-serial", "telnet:localhost:4321,server,nowait",
+
+# Or do this
+#    socat - UNIX-CONNECT:/tmp/windowsserial
+#  "-device", "pci-serial,chardev=windowsserial",
+#  "-chardev", "socket,path=/tmp/windowsserial,server=on,wait=off,id=windowsserial",
+
 ]
 
 rdp_uname = "jeffrey"
