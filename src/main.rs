@@ -664,12 +664,24 @@ async fn vm_manager(mut path_to_config: String) {
             .await
         );
       }
+      else if line.starts_with("cmd") {
+        let sh_cmd = &line[4..];
+        eprintln!("Running command: {}", &sh_cmd);
+        dump_error!(
+          tokio::process::Command::new("sh")
+            .args(&["-c", &sh_cmd])
+            .status()
+            .await
+        );
+      }
       else if line == "help" || line == "h" {
         println!(r#"Commands:
 - gui
     Opens SPICE client
 - rdp
     Opens RDP client to 127.0.0.1:3389
+- cmd COMMAND
+    runs given shell command (eg toggle-aoc or similar) on the Host
 - help
     Show this help
 - exit / quit
