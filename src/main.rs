@@ -602,7 +602,15 @@ async fn vm_manager(mut path_to_config: String) {
           rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
         }
         if vm_config.vm.rdp_pass.len() > 0 {
-          rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
+          if vm_config.vm.rdp_pass_env.len() > 0 {
+            rdp_args.push( format!("/p:{}", std::env::var(vm_config.vm.rdp_pass_env.clone()).unwrap_or(vm_config.vm.rdp_pass.clone()) ) );
+          }
+          else {
+            rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
+          }
+        }
+        else if vm_config.vm.rdp_pass_env.len() > 0 {
+          rdp_args.push( format!("/p:{}", std::env::var(vm_config.vm.rdp_pass_env.clone()).unwrap_or(vm_config.vm.rdp_pass.clone()) ) );
         }
         rdp_args.push("/v:127.0.0.1".to_string());
 

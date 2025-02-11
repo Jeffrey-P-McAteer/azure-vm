@@ -63,6 +63,8 @@ pub struct VMBlock {
   pub rdp_uname: String,
   #[serde(default = "empty_string")]
   pub rdp_pass: String,
+  #[serde(default = "empty_string")]
+  pub rdp_pass_env: String,
 
   #[serde(default = "empty_vec_string")]
   pub addtl_rdp_args: Vec<String>,

@@ -9,7 +9,8 @@ boot_iso = "/mnt/scratch/vms/Win11_23H2_English_x64v2.iso"
 name = "Windows-WD-HDD"
 mount_windows_virtio_iso = true
 #disk_partuuid = "a061de90-d70a-4a16-a955-708d6c6c4627" # Looked up + the disk holding this partition is what's booted; ie blkid /dev/sda1
-disk_partuuid = "/dev/disk/by-id/wwn-0x50014ee6051db955"
+#disk_partuuid = "/dev/disk/by-id/wwn-0x50014ee6051db955"
+disk_partuuid = "/dev/disk/by-id/ata-SSK_M001_1TB_SSKM0010000000001168"
 ram_mb = 18128
 #ram_mb = 26256
 
@@ -73,6 +74,7 @@ addtl_args = [
 
 rdp_uname = "jeffrey"
 rdp_pass = "Passw0rd!"
+rdp_pass_env = "WIN_SSD_RDP_P"
 
 addtl_rdp_args = [
   # Run 'sudo opensc-tool --list-readers' for names
@@ -97,7 +99,7 @@ preboot_cmds = [
   # "hfile /tmp/force-cpu-performance",
 
   # Power on jeff's second monitor; "hold" hangs around until killed, and so elegantly lets us power the monitor on while the VM is running and go back when it exits
-  "toggle-aoc hold silent",
+  #"toggle-aoc hold silent",
 
 ]
 
