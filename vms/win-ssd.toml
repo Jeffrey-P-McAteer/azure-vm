@@ -82,6 +82,7 @@ addtl_rdp_args = [
   "/smartcard:Alcor Link AK9563 00 00",
 
   # "/rfx",
+  "/drive:FUlL_CRISIS,/j/proj/full-crisis",
 
 ]
 
