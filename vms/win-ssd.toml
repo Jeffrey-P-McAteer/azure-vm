@@ -84,7 +84,13 @@ addtl_rdp_args = [
   # "/rfx",
   "/drive:FULL_CRISIS,/j/proj/full-crisis",
   "/drive:SURGE_STREAM,/j/proj/surge-stream",
-  "/drive:PROJ,/j/proj",
+
+  "/drive:data_star_arcpro_addin,/j/proj/data_star_arcpro_addin",
+  "/drive:data_star_arcpro_plugindatasource,/j/proj/data_star_arcpro_plugindatasource",
+  "/drive:data_star_core,/j/proj/data_star_core",
+  "/drive:data_star_discipline_configuration_tool,/j/proj/data_star_discipline_configuration_tool",
+  "/drive:data_star_project_documentation,/j/proj/data_star_project_documentation",
+
 ]
 
 
