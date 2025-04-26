@@ -84,7 +84,7 @@ addtl_rdp_args = [
   # "/rfx",
   "/drive:FULL_CRISIS,/j/proj/full-crisis",
   "/drive:SURGE_STREAM,/j/proj/surge-stream",
-
+  "/drive:PROJ,/j/proj",
 ]
 
 
