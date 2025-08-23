@@ -720,6 +720,21 @@ async fn vm_manager(mut path_to_config: String) {
     dump_error!( tokio::io::stdout().flush().await );
   }
 
+  // This adds a capability for background vms w/o interactive STDIN to remain running until something else pokes them
+  // set AZURE_VM_HOLD_WHEN_STDIN_STOPS=t to use
+  if let Ok(val) = std::env::var("AZURE_VM_HOLD_WHEN_STDIN_STOPS") {
+    if val.contains("1") || val.contains("t") || val.contains("T") {
+      println!("STDIN has stopped or errored but we are holding the VM pid={} open because AZURE_VM_HOLD_WHEN_STDIN_STOPS={}", qemu_pid, val);
+      loop {
+        match qemu_proc.try_wait() {
+          Ok(Some(exit_code)) => { println!("Qemu exited with {}, exiting!", exit_code ); break; },
+          _ => { /* don't care */ }
+        }
+        tokio::time::sleep(tokio::time::Duration::from_millis(1200)).await;
+      }
+    }
+  }
+
   println!("");
   dump_error!( std::io::stdout().flush() );
   dump_error!( tokio::io::stdout().flush().await );
