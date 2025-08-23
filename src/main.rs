@@ -725,6 +725,7 @@ async fn vm_manager(mut path_to_config: String) {
   if let Ok(val) = std::env::var("AZURE_VM_HOLD_WHEN_STDIN_STOPS") {
     if val.contains("1") || val.contains("t") || val.contains("T") {
       println!("STDIN has stopped or errored but we are holding the VM pid={} open because AZURE_VM_HOLD_WHEN_STDIN_STOPS={}", qemu_pid, val);
+      tokio::time::sleep(tokio::time::Duration::from_millis(1200)).await; // Juuuust in case qemu hasn't even booted yet -_-
       loop {
         match qemu_proc.try_wait() {
           Ok(Some(exit_code)) => { println!("Qemu exited with {}, exiting!", exit_code ); break; },
