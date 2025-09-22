@@ -7,9 +7,12 @@ use std::path::Path;
 pub fn process_usb_passthrough_to_qemu_args(vendor_and_product_ids: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
   let mut split = vendor_and_product_ids.split(':');
   let vendor_hex = split.nth(0).ok_or("no vendor specified")?;
-  let product_hex = split.nth(1).ok_or("no product specified")?;
+  let product_hex = split.nth(0).ok_or("no product specified")?;
 
-  let args = qemu_usb_args(vendor_hex, product_hex)?;
+  let mut args: Vec<String> = Vec::with_capacity(4);
+  args.extend(["-device".to_string(), "qemu-xhci,id=usb".to_string()]);
+
+  args.extend(qemu_usb_args(vendor_hex, product_hex)?);
 
   Ok(args)
 }
@@ -28,6 +31,7 @@ fn prepare_usb_for_qemu(vendor: &str, product: &str) -> Result<Option<QemuUsbArg
         if id_vendor.trim().eq_ignore_ascii_case(vendor)
             && id_product.trim().eq_ignore_ascii_case(product)
         {
+            println!("Found USB device {}:{} at {:?}", vendor, product, path.display());
             // Found the device
             let busnum = fs::read_to_string(path.join("busnum"))?.trim().to_string();
             let devnum = fs::read_to_string(path.join("devnum"))?.trim().to_string();
@@ -51,11 +55,33 @@ fn prepare_usb_for_qemu(vendor: &str, product: &str) -> Result<Option<QemuUsbArg
                 }
             }
 
+            let dev_bus_path = format!("/dev/bus/usb/{:03}/{:03}", hostbus, hostaddr);
+            make_world_rw(&dev_bus_path)?;
+
             return Ok(Some(QemuUsbArgs { hostbus, hostaddr }));
         }
     }
 
     Ok(None)
+}
+
+fn make_world_rw(path:&str) -> io::Result<()> {
+  let status = std::process::Command::new("sudo")
+        .arg("chmod")
+        .arg("a+rwx")
+        .arg(path)
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::null())
+        .spawn()?
+        .wait()?;
+  if !status.success() {
+        Err(io::Error::new(
+            io::ErrorKind::Other,
+            format!("chmod failed for {}", path),
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 fn sudo_tee(path: &Path, value: &str) -> io::Result<()> {
@@ -89,10 +115,10 @@ fn sudo_tee(path: &Path, value: &str) -> io::Result<()> {
 fn qemu_usb_args(vendor: &str, product: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
     if let Some(usb) = prepare_usb_for_qemu(vendor, product)? {
         let arg = format!(
-            "-device usb-host,hostbus={},hostaddr={}",
+            "usb-host,hostbus={},hostaddr={}",
             usb.hostbus, usb.hostaddr
         );
-        Ok(vec![arg])
+        Ok(vec!["-device".to_string(), arg])
     } else {
         Ok(Vec::new())
     }
