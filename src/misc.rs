@@ -57,12 +57,29 @@ fn prepare_usb_for_qemu(vendor: &str, product: &str) -> Result<Option<QemuUsbArg
 
             let dev_bus_path = format!("/dev/bus/usb/{:03}/{:03}", hostbus, hostaddr);
             make_world_rw(&dev_bus_path)?;
+            bind_usb_stub(vendor, product)?;
 
             return Ok(Some(QemuUsbArgs { hostbus, hostaddr }));
         }
     }
 
     Ok(None)
+}
+
+/// Make a USB device invisible to the host by binding it to usb-stub
+fn bind_usb_stub(vendor: &str, product: &str) -> io::Result<()> {
+    // Load usb-stub if not already loaded
+    let _ = std::process::Command::new("sudo").arg("modprobe").arg("usb-stub").status();
+
+    // Bind device to usb-stub
+    let new_id_path = Path::new("/sys/bus/usb/drivers/usb-stub/new_id");
+    sudo_tee(&new_id_path, &format!("{} {}", vendor, product))?;
+    println!(
+        "Bound USB device {:04x}:{:04x} to usb-stub (invisible to host)",
+        u16::from_str_radix(vendor, 16).unwrap(),
+        u16::from_str_radix(product, 16).unwrap()
+    );
+    Ok(())
 }
 
 fn make_world_rw(path:&str) -> io::Result<()> {
@@ -113,10 +130,14 @@ fn sudo_tee(path: &Path, value: &str) -> io::Result<()> {
 
 /// Construct QEMU arguments for the USB device
 fn qemu_usb_args(vendor: &str, product: &str) -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    if let Some(usb) = prepare_usb_for_qemu(vendor, product)? {
+    if let Some(_usb) = prepare_usb_for_qemu(vendor, product)? {
+        // let arg = format!(
+        //     "usb-host,hostbus={},hostaddr={}",
+        //     usb.hostbus, usb.hostaddr
+        // );
         let arg = format!(
-            "usb-host,hostbus={},hostaddr={}",
-            usb.hostbus, usb.hostaddr
+            "usb-host,vendorid=0x{},productid=0x{}",
+            vendor, product,
         );
         Ok(vec!["-device".to_string(), arg])
     } else {
@@ -126,6 +147,7 @@ fn qemu_usb_args(vendor: &str, product: &str) -> Result<Vec<String>, Box<dyn std
 
 
 /// Represents the data needed for QEMU USB passthrough
+#[allow(dead_code)]
 #[derive(Debug)]
 struct QemuUsbArgs {
     hostbus: u8,
