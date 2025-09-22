@@ -8,6 +8,9 @@ use std::path::PathBuf;
 mod structs;
 use structs::*;
 
+mod misc;
+use misc::*;
+
 #[macro_use]
 pub mod macros;
 
@@ -414,6 +417,21 @@ async fn vm_manager(mut path_to_config: String) {
       vm_config.vm.smp_override.into(),
     ]);
   }
+
+  if vm_config.vm.usb_passthrough_devices.len() > 0 {
+    // For each device, un-bind it and add it to the VM arguments (IF the device is plugged in; if not plugged in, do nothing)
+    for usb_passthrough_vendor_product in vm_config.vm.usb_passthrough_devices.iter() {
+      match process_usb_passthrough_to_qemu_args(usb_passthrough_vendor_product) {
+        Ok(addtl_qemu_args) => {
+          qemu_args.extend(addtl_qemu_args);
+        }
+        Err(e) => {
+          eprintln!("[ usb_passthrough_devices {} ] {:?}", usb_passthrough_vendor_product, e);
+        }
+      }
+    }
+  }
+
   qemu_args.append(&mut vec![
     "-machine".into(), vm_config.vm.machine_override.to_string(),
 

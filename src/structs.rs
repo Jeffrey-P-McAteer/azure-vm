@@ -72,6 +72,9 @@ pub struct VMBlock {
   #[serde(default = "empty_vec_string")]
   pub preboot_cmds: Vec<String>,
 
+  #[serde(default = "empty_vec_string")]
+  pub usb_passthrough_devices: Vec<String>,
+
 }
 
 impl VMBlock {

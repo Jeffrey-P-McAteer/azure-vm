@@ -107,4 +107,8 @@ preboot_cmds = [
 
 ]
 
+usb_passthrough_devices = [
+  # From "lsusb"
+  "04e6:5116",
+]
 
