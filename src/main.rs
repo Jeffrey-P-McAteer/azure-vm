@@ -620,15 +620,7 @@ async fn vm_manager(mut path_to_config: String) {
           rdp_args.push( format!("/u:{}", vm_config.vm.rdp_uname) );
         }
         if vm_config.vm.rdp_pass.len() > 0 {
-          if vm_config.vm.rdp_pass_env.len() > 0 {
-            rdp_args.push( format!("/p:{}", std::env::var(vm_config.vm.rdp_pass_env.clone()).unwrap_or(vm_config.vm.rdp_pass.clone()) ) );
-          }
-          else {
-            rdp_args.push( format!("/p:{}", vm_config.vm.rdp_pass) );
-          }
-        }
-        else if vm_config.vm.rdp_pass_env.len() > 0 {
-          rdp_args.push( format!("/p:{}", std::env::var(vm_config.vm.rdp_pass_env.clone()).unwrap_or(vm_config.vm.rdp_pass.clone()) ) );
+          rdp_args.push( format!("/p:{}", read_secret(&vm_config.vm.rdp_pass).await ) );
         }
         rdp_args.push("/v:127.0.0.1".to_string());
 
@@ -637,7 +629,6 @@ async fn vm_manager(mut path_to_config: String) {
         rdp_args.push("/microphone:sys:alsa".to_string());
 
         rdp_args.push("/auto-reconnect-max-retries:64".to_string());
-
 
 
         if let Some(cmd_exe) = line.split(" ").nth(1) {
@@ -801,4 +792,20 @@ async fn vm_manager(mut path_to_config: String) {
 
 }
 
+async fn read_secret(secret_config_value: &str) -> String {
+  // Is it stored in a file?
+  match tokio::fs::read(secret_config_value).await {
+    Ok(file_val) => String::from_utf8_lossy(&file_val).as_ref().trim().to_string(),
+    Err(_e) => {
+      // Is it an environment variable?
+      match std::env::var(secret_config_value) {
+        Ok(env_var_val) => env_var_val.trim().to_string(),
+        Err(_e2) => {
+          // Use value as-is
+          secret_config_value.to_string()
+        }
+      }
+    }
+  }
+}
 

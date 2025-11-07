@@ -73,8 +73,7 @@ addtl_args = [
 ]
 
 rdp_uname = "jeffrey"
-rdp_pass = "Passw0rd!"
-rdp_pass_env = "WIN_SSD_RDP_P"
+rdp_pass = "/j/.config/auth/win-ssd-p.txt"
 
 addtl_rdp_args = [
   # Run 'sudo opensc-tool --list-readers' for names
@@ -82,10 +81,11 @@ addtl_rdp_args = [
   "/smartcard:Alcor Link AK9563 00 00",
 
   # "/rfx",
-  "/drive:FULL_CRISIS,/j/proj/full-crisis",
+  #"/drive:FULL_CRISIS,/j/proj/full-crisis",
 #  "/drive:SURGE_STREAM,/j/proj/surge-stream",
 
-  "/drive:DATA_STAR,/j/proj/ds",
+  #"/drive:DATA_STAR,/j/proj/ds",
+  "/drive:SEVEN_SCREAMS,/j/proj/Seven-Screams",
 
 ]
 
@@ -104,6 +104,9 @@ preboot_cmds = [
 
   # Power on jeff's second monitor; "hold" hangs around until killed, and so elegantly lets us power the monitor on while the VM is running and go back when it exits
   #"toggle-aoc hold silent",
+
+  # Inform the BG runner the user ran the VM
+  "touch /j/.cache/last-time-windows-vm-bg-runner-ran",
 
 ]
 
