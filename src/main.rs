@@ -606,6 +606,9 @@ async fn vm_manager(mut path_to_config: String) {
         );
       }
       else if line.starts_with("rdp") {
+
+        let rdp_pw_to_censor = read_secret(&vm_config.vm.rdp_pass).await;
+
         let mut rdp_args: Vec<String> = vec![];
 
         rdp_args.push("/cert:ignore".to_string());
@@ -636,17 +639,11 @@ async fn vm_manager(mut path_to_config: String) {
           rdp_args.push(format!("/app:{}", cmd_exe));
 
           // Append up to 20 args
-          let rdp_pw_to_censor = read_secret(&vm_config.vm.rdp_pass).await;
           let mut cmd_arg_args = cmd_exe.to_string();
           for i in 2..20 {
             if let Some(cmd_arg) = line.split(" ").nth(i) { // ... Why did I do that? This is so dumb.
               // println!("cmd_arg = {:?}", cmd_arg);
-              if cmd_arg.contains(&rdp_pw_to_censor) {
-                cmd_arg_args += &(" ********".to_string());
-              }
-              else {
-                cmd_arg_args += &(" ".to_string() + cmd_arg);
-              }
+              cmd_arg_args += &(" ".to_string() + cmd_arg);
             }
           }
           if cmd_arg_args.len() > 0 {
@@ -673,7 +670,14 @@ async fn vm_manager(mut path_to_config: String) {
         };
 
         {
-          let debug_rdp_args = rdp_args.join(" ");
+          let debug_rdp_args = rdp_args.iter().map(|arg| {
+            if arg.contains(&rdp_pw_to_censor) {
+              "*******".to_string()
+            }
+            else {
+              arg.to_string()
+            }
+          }).collect::<Vec<_>>().join(" ");
           println!("{} {}", freerdp_bin, debug_rdp_args );
         }
 
