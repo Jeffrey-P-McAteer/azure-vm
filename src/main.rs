@@ -635,12 +635,18 @@ async fn vm_manager(mut path_to_config: String) {
           println!("cmd_exe = {:?}", cmd_exe);
           rdp_args.push(format!("/app:{}", cmd_exe));
 
-          // Append up to 10 args
+          // Append up to 20 args
+          let rdp_pw_to_censor = read_secret(&vm_config.vm.rdp_pass).await;
           let mut cmd_arg_args = cmd_exe.to_string();
-          for i in 2..12 {
-            if let Some(cmd_arg) = line.split(" ").nth(i) {
+          for i in 2..20 {
+            if let Some(cmd_arg) = line.split(" ").nth(i) { // ... Why did I do that? This is so dumb.
               // println!("cmd_arg = {:?}", cmd_arg);
-              cmd_arg_args += &(" ".to_string() + cmd_arg);
+              if cmd_arg.contains(&rdp_pw_to_censor) {
+                cmd_arg_args += &(" ********".to_string());
+              }
+              else {
+                cmd_arg_args += &(" ".to_string() + cmd_arg);
+              }
             }
           }
           if cmd_arg_args.len() > 0 {
