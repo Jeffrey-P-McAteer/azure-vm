@@ -87,6 +87,10 @@ impl VMBlock {
         }
       }
       else {
+        if let Err(e) = std::fs::create_dir(PathBuf::from("/tmp/vms/")) {
+          eprintln!("{}:{} {:?}", file!(), line!(), e);
+        }
+
         if flag.chars().next() == Some('.') { // If  a '.' is already specified, avoid creating 2 dots in file path
           PathBuf::from(format!("/tmp/vms/_flag_{}{}", &self.disk_partuuid.replace("/", "-"), flag))
         }
